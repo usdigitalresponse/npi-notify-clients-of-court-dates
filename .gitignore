@@ -1,8 +1,25 @@
-# This is an extremely basic .gitignore file!
-#
-# As you start building out your project, you'll probably want to add more here.
-# For some good, language/tool-specific .gitignore examples, check out:
-# https://github.com/github/gitignore
+# Compiled class file
+*.class
 
-.DS_Store
-scratch.*
+# Log file
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+target/
