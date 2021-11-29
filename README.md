@@ -1,10 +1,10 @@
-‼️⚠️ **Welcome to your new repo! It already includes a few important files. First things first, please update this repository with information specific to your project. It doesn't need to be perfect or 100% complete, but please to fill in as much as possible to start with. In particular, please make sure to replace the text `{PROJECT_NAME}` and `{YOUR_GITHUB_USERNAME}`.**
+‼️⚠️ **Welcome to your new repo! It already includes a few important files. First things first, please update this repository with information specific to your project. It doesn't need to be perfect or 100% complete, but please to fill in as much as possible to start with.**
 
 **Please review USDR’s general guidelines for software & data, too: https://policies.usdigitalresponse.org/data-and-software-guidelines**
 
 [![Code of Conduct](https://img.shields.io/badge/%E2%9D%A4-code%20of%20conduct-blue.svg?style=flat)](./CODE_OF_CONDUCT.md)
 
-# {PROJECT_NAME}
+# NPI: Notify Clients of Court Dates
 
 Description of what the project does and who & where it is used.
 
@@ -28,7 +28,7 @@ This repository falls under [U.S. Digital Response’s Code of Conduct](./CODE_O
 
 This project wouldn’t exist without the hard work of many people. Thanks to the following for all their contributions! Please see [`CONTRIBUTING.md`](./CONTRIBUTING.md) to find out how you can help.
 
-**Lead Maintainer:** [@{YOUR_GITHUB_USERNAME}](https://github.com/{YOUR_GITHUB_USERNAME})
+**Lead Maintainer:** [@chrisxkeith](https://github.com/chrisxkeith)
 
 **Additional Contributors:**
 
