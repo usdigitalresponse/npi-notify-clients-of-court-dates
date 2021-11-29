@@ -1,6 +1,6 @@
 # NPI: Notify Clients of Court Dates
 
-This project will help NPI[https://npimemphis.org/] notify people who have eviction proceedings of their court date and location.
+This project will help [NPI](https://npimemphis.org/) notify people who have eviction proceedings of their court date and location.
 
 ## Setup & Installation
 
