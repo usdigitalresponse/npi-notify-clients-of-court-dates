@@ -24,16 +24,18 @@ public class DataScraper {
     String trimString(String s) {
       return s.trim().replace(",", "").replace("\n", " ");
     }
+    String rowData() {
+      return this.trimString(caseNumber) + ',' +
+            this.trimString(clientLastName) + ',' +
+            this.trimString(clientFirstName) + ',' +
+            this.trimString(clientAddress) + ',' +
+            this.trimString(courtDate) + ',' +
+            this.trimString(location) + ',' +
+            this.trimString(room) + ',' +
+            this.trimString(landlord);
+    }
     void print() {
-      System.out.println(
-        this.trimString(caseNumber) + ',' +
-        this.trimString(clientLastName) + ',' +
-        this.trimString(clientFirstName) + ',' +
-        this.trimString(clientAddress) + ',' +
-        this.trimString(courtDate) + ',' +
-        this.trimString(location) + ',' +
-        this.trimString(room) + ',' +
-        this.trimString(landlord));
+      System.out.println(this.rowData());
     }
 }
 /*  private void doSleep(int seconds) {
@@ -49,6 +51,12 @@ public class DataScraper {
     crd.room = driver.findElement(By.cssSelector("a:nth-child(5) td:nth-child(3)")).getText();
     crd.location = driver.findElement(By.cssSelector("a:nth-child(5) td:nth-child(4)")).getText();
   }
+  void dumpThrowable(Throwable t, ClientRowData crd) {
+    if (this.showExceptions) {
+      String[] lines = t.getMessage().split("\n");
+      System.out.println("0," + crd.rowData() + ",exception," + lines[0]);
+    }
+  }
   void fillInCourtInfo(ClientRowData crd) {
     if (!crd.caseNumber.isEmpty()) {
       driver.findElement(By.linkText(crd.caseNumber)).click();
@@ -58,9 +66,7 @@ public class DataScraper {
         crd.print();
         this.caseCount++;
       } catch(Throwable e) {
-        if (this.debug) {
-          System.out.println("crd.caseNumber exception: " + e.toString());
-        }
+        this.dumpThrowable(e, crd);
         // Assume no (or incomplete) case event history. Continue to the next row in the case list.
       }              
       this.js.executeScript("window.history.go(-1)");
@@ -98,9 +104,6 @@ void fillInDefendantInfo(Integer rowNumber) {
     this.setDefendantName(crd, defendant_name);
     this.fillInCaseAndLandlord(crd, rowNumber);
     this.fillInCourtInfo(crd);
-    if (this.debug) {
-      crd.print();
-    }
   }
   private void getDefendant(ClientRowData crd) {
     final String defendantName = driver.findElement(By.cssSelector(
@@ -121,9 +124,7 @@ void fillInDefendantInfo(Integer rowNumber) {
       crd.print();
       this.caseCount++;
     } catch(Throwable e) {
-      if (this.debug) {
-        System.out.println("crd.caseNumber exception: " + e.toString());
-      }
+      this.dumpThrowable(e, crd);
     }              
     this.js.executeScript("window.history.go(-1)");
   }
@@ -199,9 +200,9 @@ void fillInDefendantInfo(Integer rowNumber) {
     }
     return n.toString();
   }
-  private boolean debug = false;
+  private boolean showExceptions = false;
   private boolean testing = false;
-  private int caseCount = 0;
+  private Long caseCount = 0L;
   private WebDriver driver;
   JavascriptExecutor js;
   
@@ -217,14 +218,12 @@ void fillInDefendantInfo(Integer rowNumber) {
       this.scrapeByFirstLetter(Character.toString(c));
     }
     driver.quit();
-    if (debug) {
-      Long timeElapsed = Duration.between(start, Instant.now()).toMillis() / 1000;
-      System.out.println("caseCount: " + caseCount);
-      Long minutes = timeElapsed / 60;
-      Long seconds = timeElapsed % 60;
-      String elapsed = this.padDigit(minutes) + ":" + this.padDigit(seconds);
-      System.out.println("duration MM:SS : " + elapsed);
-    }
+    Long timeElapsed = Duration.between(start, Instant.now()).toMillis() / 1000;
+    System.err.println("0,caseCount," + caseCount);
+    Long minutes = timeElapsed / 60;
+    Long seconds = timeElapsed % 60;
+    String elapsed = this.padDigit(minutes) + ":" + this.padDigit(seconds);
+    System.err.println("0,duration(MM:SS)," + elapsed);
   }
   public static void main(String[] args) {
       new DataScraper().scrapeData();
