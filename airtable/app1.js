@@ -61,9 +61,11 @@ ${this.buildBody(rec)}`
         for (let rec of filteredRecords) {
             if (!rec.getCellValue('Date Email Sent') && rec.getCellValue('Email')) {
                 this.sendEmail(rec);
+                table.updateRecordAsync(rec, {'Date Email Sent' : new Date().toISOString()})
             }
             if (!rec.getCellValue('Date SMS Sent') && rec.getCellValue('Phone')) {
                 this.sendSMS(rec);
+                table.updateRecordAsync(rec, {'Date SMS Sent' : new Date().toISOString()})
             }
         }
     }
