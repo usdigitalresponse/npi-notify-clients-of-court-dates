@@ -103,14 +103,6 @@ void fillInDefendantInfo(Integer rowNumber) {
     }
   }
   private void getDefendant(ClientRowData crd) {
-/*
-    final String defendantTitle = driver.findElement(By.cssSelector(
-        "css=a:nth-child(6) tr:nth-child(5) > td:nth-child(4)")).getText(); 
-    if (!defendantTitle.equals("DEFENDANT")) {
-      System.out.println("Can't find defendant for case: " + crd.caseNumber);
-      return;
-    }
-*/
     final String defendantName = driver.findElement(By.cssSelector(
         "tr:nth-child(5) b")).getText();
     this.setDefendantName(crd, defendantName);
@@ -201,6 +193,12 @@ void fillInDefendantInfo(Integer rowNumber) {
     driver.findElement(By.cssSelector("input:nth-child(4)")).click();
     this.scrapeOnePage();
   }
+  private String padDigit(Long n) {
+    if (n < 10) {
+      return "0" + n.toString();
+    }
+    return n.toString();
+  }
   private boolean debug = false;
   private boolean testing = false;
   private int caseCount = 0;
@@ -222,7 +220,10 @@ void fillInDefendantInfo(Integer rowNumber) {
     if (debug) {
       Long timeElapsed = Duration.between(start, Instant.now()).toMillis() / 1000;
       System.out.println("caseCount: " + caseCount);
-      System.out.println("duration in seconds: " + timeElapsed.toString());
+      Long minutes = timeElapsed / 60;
+      Long seconds = timeElapsed % 60;
+      String elapsed = this.padDigit(minutes) + ":" + this.padDigit(seconds);
+      System.out.println("duration MM:SS : " + elapsed);
     }
   }
   public static void main(String[] args) {
