@@ -63,18 +63,7 @@ public class DataScraper {
       this.js.executeScript("window.history.go(-1)");
     }
   }
-  void fillInDefendantInfo(Integer rowNumber) {
-    ClientRowData crd = new ClientRowData();      
-    final String NAME_CORPORATION_COLUMN = "2";
-    final String defendant_name = driver.findElement(By.cssSelector(
-            "tr:nth-child(" + rowNumber.toString() + ") > td:nth-child(" + NAME_CORPORATION_COLUMN + ")")).getText();
-    if (defendant_name.contains(",")) {
-      String[] names = defendant_name.split(","); // last, first
-      crd.clientLastName = names[0];
-      crd.clientFirstName = names[1];
-    } else {
-      crd.clientLastName = defendant_name;
-    }
+  void fillInCaseAndLandlord(ClientRowData crd, Integer rowNumber) {
     final String ADDRESS_COLUMN = "3";
     final String cellText = driver.findElement(By.cssSelector(
             "tr:nth-child(" + rowNumber.toString() + ") > td:nth-child(" + ADDRESS_COLUMN + ")")).getText();    
@@ -86,6 +75,23 @@ public class DataScraper {
     if (matcher.find()) {
       crd.caseNumber = matcher.group();
     }
+  }
+  void setDefendantName(ClientRowData crd, String defendant_name) {
+    if (defendant_name.contains(",")) {
+      String[] names = defendant_name.split(","); // last, first
+      crd.clientLastName = names[0];
+      crd.clientFirstName = names[1];
+    } else {
+      crd.clientLastName = defendant_name;
+    }
+  }
+void fillInDefendantInfo(Integer rowNumber) {
+    ClientRowData crd = new ClientRowData();      
+    final String NAME_CORPORATION_COLUMN = "2";
+    final String defendant_name = driver.findElement(By.cssSelector(
+            "tr:nth-child(" + rowNumber.toString() + ") > td:nth-child(" + NAME_CORPORATION_COLUMN + ")")).getText();
+    this.setDefendantName(crd, defendant_name);
+    this.fillInCaseAndLandlord(crd, rowNumber);
     this.fillInCourtInfo(crd);
     if (this.debug) {
       crd.print();
@@ -156,7 +162,7 @@ public class DataScraper {
     this.scrapeOnePage();
   }
   private boolean debug = false;
-  private boolean testing = false;
+  private boolean testing = true;
   private int caseCount = 0;
   private WebDriver driver;
   JavascriptExecutor js;
