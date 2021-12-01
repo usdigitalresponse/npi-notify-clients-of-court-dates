@@ -125,11 +125,17 @@ public class DataScraper {
   }
   private SimpleDateFormat df = new SimpleDateFormat("dd-MMM-YYYY");
   String getFirstDate() {
+    if (this.testing) {
+      return "01-NOV-2021";
+    }
     Calendar c = Calendar.getInstance();
     c.set(Calendar.DAY_OF_MONTH, 1);
     return df.format(c.getTime());
   }
   String getLastDate() {
+    if (this.testing) {
+      return "30-NOV-2021";
+    }
     return df.format(Calendar.getInstance().getTime());
   }
   void scrapeByFirstLetter(String firstLetter) {
@@ -150,6 +156,7 @@ public class DataScraper {
     this.scrapeOnePage();
   }
   private boolean debug = false;
+  private boolean testing = false;
   private int caseCount = 0;
   private WebDriver driver;
   JavascriptExecutor js;
@@ -158,7 +165,11 @@ public class DataScraper {
     driver = new ChromeDriver();
     js = (JavascriptExecutor) driver;
     Instant start = Instant.now();
-    for (char c = 'A'; c <= 'Z'; c++) {
+    char lastChar = 'Z';
+    if (this.testing) {
+      lastChar = 'A';
+    }
+    for (char c = 'A'; c <= lastChar; c++) {
       this.scrapeByFirstLetter(Character.toString(c));
     }
     driver.quit();
