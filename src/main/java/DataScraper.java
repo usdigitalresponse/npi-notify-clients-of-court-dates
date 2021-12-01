@@ -102,6 +102,39 @@ void fillInDefendantInfo(Integer rowNumber) {
       crd.print();
     }
   }
+  private void getDefendant(ClientRowData crd) {
+/*
+    final String defendantTitle = driver.findElement(By.cssSelector(
+        "css=a:nth-child(6) tr:nth-child(5) > td:nth-child(4)")).getText(); 
+    if (!defendantTitle.equals("DEFENDANT")) {
+      System.out.println("Can't find defendant for case: " + crd.caseNumber);
+      return;
+    }
+*/
+    final String defendantName = driver.findElement(By.cssSelector(
+        "tr:nth-child(5) b")).getText();
+    this.setDefendantName(crd, defendantName);
+    final String defendantAddress = driver.findElement(By.cssSelector(
+        "a:nth-child(6) tr:nth-child(6) > td:nth-child(2)")).getText();
+    crd.clientAddress = defendantAddress; 
+  }
+  private void getDefendantInfoFromCase(Integer rowNumber) {
+    ClientRowData crd = new ClientRowData();
+    this.fillInCaseAndLandlord(crd, rowNumber);
+    driver.findElement(By.linkText(crd.caseNumber)).click();
+    try {
+      driver.switchTo().frame(1);
+      this.getCourtData(crd);
+      this.getDefendant(crd);
+      crd.print();
+      this.caseCount++;
+    } catch(Throwable e) {
+      if (this.debug) {
+        System.out.println("crd.caseNumber exception: " + e.toString());
+      }
+    }              
+    this.js.executeScript("window.history.go(-1)");
+  }
   void scrapeOnePage() {
     boolean switchFrame = true;
     while (true) {
@@ -117,6 +150,8 @@ void fillInDefendantInfo(Integer rowNumber) {
           final String party_type = driver.findElement(By.cssSelector("tr:nth-child(" + rowNumber.toString() + ") > td:nth-child(" + PARTY_TYPE_COLUMN + ")")).getText();
           if (party_type.equals("DEFENDANT")) {
             fillInDefendantInfo(rowNumber);
+          } else if (party_type.equals("PLAINTIFF")) {
+            getDefendantInfoFromCase(rowNumber);
           } else {
             switchFrame = false;
           }
