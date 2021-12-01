@@ -74,6 +74,8 @@ public class DataScraper {
     Matcher matcher = pattern.matcher(cellText);
     if (matcher.find()) {
       crd.caseNumber = matcher.group();
+    } else {
+      System.out.println("No 7-digit case# in: " + cellText);
     }
   }
   void setDefendantName(ClientRowData crd, String defendant_name) {
@@ -162,7 +164,7 @@ void fillInDefendantInfo(Integer rowNumber) {
     this.scrapeOnePage();
   }
   private boolean debug = false;
-  private boolean testing = true;
+  private boolean testing = false;
   private int caseCount = 0;
   private WebDriver driver;
   JavascriptExecutor js;
