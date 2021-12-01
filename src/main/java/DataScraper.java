@@ -152,10 +152,13 @@ void fillInDefendantInfo(Integer rowNumber) {
           }
         } catch(Throwable t) {
           // Assume we ran out of rows on this page.
-          return;
+          break;
         }
       }
       try {
+        if (switchFrame) {
+          driver.switchTo().frame(1);
+        }
         driver.findElement(By.linkText("Next->")).click();
       } catch(Throwable t) {
           // Assume we ran out of clients beginning with 'firstLetter'.
