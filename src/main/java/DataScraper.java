@@ -52,9 +52,10 @@ public class DataScraper {
     crd.location = driver.findElement(By.cssSelector("a:nth-child(5) td:nth-child(4)")).getText();
   }
   void dumpThrowable(Throwable t, ClientRowData crd) {
+    skipCount++;
     if (this.showExceptions) {
       String[] lines = t.getMessage().split("\n");
-      System.out.println("0," + crd.rowData() + ",exception," + lines[0]);
+      System.out.println("0," + crd.rowData() + "," + lines[0]);
     }
   }
   void fillInCourtInfo(ClientRowData crd) {
@@ -146,6 +147,7 @@ void fillInDefendantInfo(Integer rowNumber) {
           } else if (party_type.equals("PLAINTIFF")) {
             getDefendantInfoFromCase(rowNumber);
           } else {
+            skipCount++;
             switchFrame = false;
           }
         } catch(Throwable t) {
@@ -164,16 +166,16 @@ void fillInDefendantInfo(Integer rowNumber) {
   }
   private SimpleDateFormat df = new SimpleDateFormat("dd-MMM-YYYY");
   String getFirstDate() {
-    if (this.testing) {
-      return "01-NOV-2021";
+    if (this.args.length > 0) {
+      return this.args[0];
     }
     Calendar c = Calendar.getInstance();
     c.set(Calendar.DAY_OF_MONTH, 1);
     return df.format(c.getTime());
   }
   String getLastDate() {
-    if (this.testing) {
-      return "30-NOV-2021";
+    if (this.args.length > 1) {
+      return this.args[1];
     }
     return df.format(Calendar.getInstance().getTime());
   }
@@ -200,32 +202,39 @@ void fillInDefendantInfo(Integer rowNumber) {
     }
     return n.toString();
   }
+  private String[] args;
   private boolean showExceptions = false;
-  private boolean testing = false;
   private Long caseCount = 0L;
+  private Long skipCount = 0L;
   private WebDriver driver;
   JavascriptExecutor js;
   
-  public void scrapeData() {
+  public void scrapeData(String[] args) {
+    this.args = args;
+//    this.args = new String[] {"01-NOV-2021", "30-NOV-2021", "A"};
     driver = new ChromeDriver();
     js = (JavascriptExecutor) driver;
     Instant start = Instant.now();
     char lastChar = 'Z';
-    if (this.testing) {
-      lastChar = 'A';
+    if (this.args.length > 2) {
+      lastChar = this.args[2].charAt(0);
+    }
+    if (this.args.length > 3) {
+      showExceptions = true;
     }
     for (char c = 'A'; c <= lastChar; c++) {
       this.scrapeByFirstLetter(Character.toString(c));
     }
     driver.quit();
-    Long timeElapsed = Duration.between(start, Instant.now()).toMillis() / 1000;
     System.err.println("0,caseCount," + caseCount);
+    System.err.println("0,skipCount," + skipCount);
+    Long timeElapsed = Duration.between(start, Instant.now()).toMillis() / 1000;
     Long minutes = timeElapsed / 60;
     Long seconds = timeElapsed % 60;
     String elapsed = this.padDigit(minutes) + ":" + this.padDigit(seconds);
     System.err.println("0,duration(MM:SS)," + elapsed);
   }
   public static void main(String[] args) {
-      new DataScraper().scrapeData();
+      new DataScraper().scrapeData(args);
   }
 }
