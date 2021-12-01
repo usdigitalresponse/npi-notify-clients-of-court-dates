@@ -44,14 +44,17 @@ public class DataScraper {
       e.printStackTrace();
     }
   } */
+  void getCourtData(ClientRowData crd) {
+    crd.courtDate = driver.findElement(By.cssSelector("a:nth-child(5) td:nth-child(2)")).getText();
+    crd.room = driver.findElement(By.cssSelector("a:nth-child(5) td:nth-child(3)")).getText();
+    crd.location = driver.findElement(By.cssSelector("a:nth-child(5) td:nth-child(4)")).getText();
+  }
   void fillInCourtInfo(ClientRowData crd) {
     if (!crd.caseNumber.isEmpty()) {
       driver.findElement(By.linkText(crd.caseNumber)).click();
       try {
         driver.switchTo().frame(1);
-        crd.courtDate = driver.findElement(By.cssSelector("a:nth-child(5) td:nth-child(2)")).getText();
-        crd.room = driver.findElement(By.cssSelector("a:nth-child(5) td:nth-child(3)")).getText();
-        crd.location = driver.findElement(By.cssSelector("a:nth-child(5) td:nth-child(4)")).getText();
+        this.getCourtData(crd);
         crd.print();
         this.caseCount++;
       } catch(Throwable e) {
