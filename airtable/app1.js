@@ -2,22 +2,12 @@ class App1 {
     /**
     * @param {string | EvictionsMessages2Table_Record} rec
     */
-    getCourtDate(rec) {
-        const dateStr = rec.getCellValue('Confirmed Court Date')
-        return new Date(dateStr).
-                toLocaleDateString('en-us', 
-                { weekday:"long", year:"numeric", month:"short", day:"numeric"}) 
-    }
-    /**
-    * @param {string | EvictionsMessages2Table_Record} rec
-    */
     buildBody(rec) {
-        const theDate = this.getCourtDate(rec)
-        return `You have an eviction hearing on ${theDate} \
-at the ${rec.getCellValue('Next Court Date Location')}, \
-room ${rec.getCellValue('Next Court Date Room')}.
+        return `You have an eviction hearing on ${rec.getCellValue('Next Court Date')} \
+at building: ${rec.getCellValue('Next Court Date Location')}, \
+room" ${rec.getCellValue('Next Court Date Room')}.
 
-Your case number is ${rec.getCellValue('Confirmed Case #')}. \
+Your case number is ${rec.getCellValue('Eviction Case Number')}. \
 Please contact the courts at https://gs4.shelbycountytn.gov/8/Civil-Division if you have any questions.
 
 This message was sent by an automated system from npimemphis.org. Please do not reply to it. Thank you.`
@@ -26,50 +16,50 @@ This message was sent by an automated system from npimemphis.org. Please do not 
     * @param {string | EvictionsMessages2Table_Record} rec
     */
     buildEmail(rec) {
-        return `Dear ${rec.getCellValue('First')} ${rec.getCellValue('Last')},
+        return `Dear ${rec.getCellValue('AppFirstName')} ${rec.getCellValue('AppLastName')},
 ${this.buildBody(rec)}`
     }
     /**
     * @param {string | EvictionsMessages2Table_Record} rec
     */
-    sendEmail(rec) {
-        console.log('To: ' + rec.getCellValue('Email'));
+    showEmail(rec) {
+        console.log('To: ' + rec.getCellValue('ApplicantEmail'));
         console.log('From: do-not-reply@npimemphis.org');
-        const theDate = this.getCourtDate(rec);
-
-        console.log('Subject: ' + 'You have an eviction hearing on ' + theDate);
+        console.log('Subject: ' + 'You have an eviction hearing on ' + rec.getCellValue('Next Court Date'));
         console.log('Body: ' + this.buildEmail(rec));
-    }
-    /**
-    * @param {string | EvictionsMessages2Table_Record} rec
-    */
-    sendSMS(rec) {
-        console.log('To be texted to: ' + rec.getCellValue('Phone'));
-        console.log(this.buildBody(rec));
     }
     /**
     * @param {EvictionsMessages2Table_RecordQueryResult} query
     */
     runIt(query) {
-        let filteredRecords = query.records.filter(rec => {
-            return !(rec.getCellValue('Date Email Sent') || rec.getCellValue('Date SMS Sent')) &&
-            rec.getCellValue('Confirmed Court Date') &&
-            rec.getCellValue('Next Court Date Location') &&
-            rec.getCellValue('Next Court Date Room') &&
-            rec.getCellValue('Confirmed Case #')
+        let alreadyMarkedRecords = query.records.filter(rec => {
+            return (rec.getCellValue('Email For Automation')
+                   )
         })
-        for (let rec of filteredRecords) {
-            if (!rec.getCellValue('Date Email Sent') && rec.getCellValue('Email')) {
-                this.sendEmail(rec);
-                table.updateRecordAsync(rec, {'Date Email Sent' : new Date().toISOString()})
-            }
-            if (!rec.getCellValue('Date SMS Sent') && rec.getCellValue('Phone')) {
-                this.sendSMS(rec);
-                table.updateRecordAsync(rec, {'Date SMS Sent' : new Date().toISOString()})
-            }
+        for (let rec of alreadyMarkedRecords) {
+            table.updateRecordAsync(rec, {'Email For Automation' : ''})
         }
+        let filteredRecords = query.records.filter(rec => {
+            return (!rec.getCellValue('Tenant Invitation Email Sent') &&
+                    rec.getCellValue('Next Court Date') &&            
+                    rec.getCellValue('Next Court Date Location') &&
+                    rec.getCellValue('Next Court Date Room') &&
+                    rec.getCellValue('ApplicantEmail') &&
+                    rec.getCellValue('Eviction Case Number')
+                   )
+        })
+        let c = 0
+        for (let rec of filteredRecords) {
+            if (c === 0) {
+                this.showEmail(rec);
+            }
+            let email = rec.getCellValue('ApplicantEmail')
+            table.updateRecordAsync(rec, {'Email For Automation' : email})
+            c++
+        }
+        console.log('Marked ' + c + ' applicants for automated email sending.');
     }
 }
-let table = base.getTable('Evictions Messages 2');
+let table = base.getTable('All Applicants');
 let query = await table.selectRecordsAsync({fields: table.fields});
 new App1().runIt(query);
