@@ -1,7 +1,4 @@
 class App1 {
-    /**
-    * @param {string | EvictionsMessages2Table_Record} rec
-    */
     buildBody(rec) {
         return `You have an eviction hearing on ${rec.getCellValue('Next Court Date')} \
 at building: ${rec.getCellValue('Next Court Date Location')}, \
@@ -12,25 +9,16 @@ Please contact the courts at https://gs4.shelbycountytn.gov/8/Civil-Division if 
 
 This message was sent by an automated system from npimemphis.org. Please do not reply to it. Thank you.`
     }
-    /**
-    * @param {string | EvictionsMessages2Table_Record} rec
-    */
     buildEmail(rec) {
         return `Dear ${rec.getCellValue('AppFirstName')} ${rec.getCellValue('AppLastName')},
 ${this.buildBody(rec)}`
     }
-    /**
-    * @param {string | EvictionsMessages2Table_Record} rec
-    */
     showEmail(rec) {
         console.log('To: ' + rec.getCellValue('ApplicantEmail'));
         console.log('From: do-not-reply@npimemphis.org');
         console.log('Subject: ' + 'You have an eviction hearing on ' + rec.getCellValue('Next Court Date'));
         console.log('Body: ' + this.buildEmail(rec));
     }
-    /**
-    * @param {EvictionsMessages2Table_RecordQueryResult} query
-    */
     runIt(query) {
         let alreadyMarkedRecords = query.records.filter(rec => {
             return (rec.getCellValue('Email For Automation')
