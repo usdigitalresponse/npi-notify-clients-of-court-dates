@@ -1,22 +1,29 @@
 class App1 {
     buildBody(rec) {
-        return `You have an eviction hearing on ${rec.getCellValue('Next Court Date')} \
-at building: ${rec.getCellValue('Next Court Date Location')}, \
-room" ${rec.getCellValue('Next Court Date Room')}.
+        return `You are receiving this email because you have applied for eviction/rental help from Neighborhood Preservation, Inc.
 
-Your case number is ${rec.getCellValue('Eviction Case Number')}. \
-Please contact the courts at https://gs4.shelbycountytn.gov/8/Civil-Division if you have any questions.
+You have a court eviction hearing on ${rec.getCellValue('Next Court Date')} 
+at building: ${rec.getCellValue('Next Court Date Location')}, 
+in room" ${rec.getCellValue('Next Court Date Room')}. Your case number is ${rec.getCellValue('Eviction Case Number')}.
 
-This message was sent by an automated system from npimemphis.org. Please do not reply to it. Thank you.`
+You may have received U.S. Postal mail from the court containing a court date and location. That information may be incorrect. 
+To verify your court date, you can call the Court Clerk at (901) 222-3500. <b>What should the phone number be?</b>. 
+You can also view your case information at 
+https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_doct.cp_dktrpt_frames?case_id=${rec.getCellValue('Eviction Case Number')}.
+
+Please plan to arrive at court <i>at least</i> 15 minutes early to find parking and get to your courtroom. <b>Any other tips here?</b>
+
+This message was sent by an automated system from https://npimemphis.org. Please do not reply. Thank you.`
     }
     buildEmail(rec) {
-        return `Dear ${rec.getCellValue('AppFirstName')} ${rec.getCellValue('AppLastName')},
+        return `Hello ${rec.getCellValue('AppFirstName')} ${rec.getCellValue('AppLastName')}, \
+\
 ${this.buildBody(rec)}`
     }
     showEmail(rec) {
         console.log('To: ' + rec.getCellValue('ApplicantEmail'));
         console.log('From: do-not-reply@npimemphis.org');
-        console.log('Subject: ' + 'You have an eviction hearing on ' + rec.getCellValue('Next Court Date'));
+        console.log('Subject: ' + 'Your court eviction hearing');
         console.log('Body: ' + this.buildEmail(rec));
     }
     runIt(query) {
@@ -28,12 +35,13 @@ ${this.buildBody(rec)}`
             table.updateRecordAsync(rec, {'Email For Automation' : ''})
         }
         let filteredRecords = query.records.filter(rec => {
-            return (!rec.getCellValue('Tenant Invitation Email Sent') &&
+            return (!rec.getCellValue('Tenant Case Email Sent') &&
                     rec.getCellValue('Next Court Date') &&            
                     rec.getCellValue('Next Court Date Location') &&
                     rec.getCellValue('Next Court Date Room') &&
                     rec.getCellValue('ApplicantEmail') &&
-                    rec.getCellValue('Eviction Case Number')
+                    rec.getCellValue('Eviction Case Number') &&
+                    rec.getCellValue('Case Status (In Neighborly)') === 'Approved: Sent for legal'
                    )
         })
         let c = 0
