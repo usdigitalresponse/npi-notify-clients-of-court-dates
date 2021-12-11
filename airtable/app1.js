@@ -55,11 +55,13 @@ ${this.buildEmail(rec)}`
         })
         let c = 0
         for (let rec of filteredRecords) {
+            let now = new Date()
             if (c === 0) {
                 this.showEmail(rec);
             }
             let email = rec.getCellValue('ApplicantEmail')
             table.updateRecordAsync(rec, {'Email For Automation' : email})
+            table.updateRecordAsync(rec, {'Tenant Case Email Sent' : now})
             c++
         }
         console.log('Marked ' + c + ' applicants for automated email sending.');
