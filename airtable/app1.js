@@ -35,7 +35,12 @@ ${this.buildBody(rec)}`
         }
         let filteredRecords = query.records.filter(rec => {
             let caseNumber = rec.getCellValue('Eviction Case Number')
-            return (rec.getCellValue('Case Status (In Neighborly)') === 'Approved: Sent for legal' &&
+            let status = rec.getCellValue('Case Status (In Neighborly)')
+            let status_val = ''
+            if (status && status[0] && status[0]['name']) {
+                status_val = status[0]['name']
+            }
+            return (status_val.includes('Approved: Sent for legal') &&
                     caseNumber !== 'Not Found' &&
                     caseNumber !== '' &&
                    !rec.getCellValue('Tenant Case Email Sent') &&
