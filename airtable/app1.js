@@ -28,20 +28,21 @@ ${this.buildBody(rec)}`
     }
     runIt(query) {
         let alreadyMarkedRecords = query.records.filter(rec => {
-            return (rec.getCellValue('Email For Automation')
-                   )
+            return (rec.getCellValue('Email For Automation'))
         })
         for (let rec of alreadyMarkedRecords) {
             table.updateRecordAsync(rec, {'Email For Automation' : ''})
         }
         let filteredRecords = query.records.filter(rec => {
-            return (!rec.getCellValue('Tenant Case Email Sent') &&
+            let caseNumber = rec.getCellValue('Eviction Case Number')
+            return (rec.getCellValue('Case Status (In Neighborly)') === 'Approved: Sent for legal' &&
+                    caseNumber !== 'Not Found' &&
+                    caseNumber !== '' &&
+                   !rec.getCellValue('Tenant Case Email Sent') &&
+                    rec.getCellValue('ApplicantEmail') &&                   
                     rec.getCellValue('Next Court Date') &&            
                     rec.getCellValue('Next Court Date Location') &&
-                    rec.getCellValue('Next Court Date Room') &&
-                    rec.getCellValue('ApplicantEmail') &&
-                    rec.getCellValue('Eviction Case Number') &&
-                    rec.getCellValue('Case Status (In Neighborly)') === 'Approved: Sent for legal'
+                    rec.getCellValue('Next Court Date Room') 
                    )
         })
         let c = 0
