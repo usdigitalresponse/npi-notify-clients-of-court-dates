@@ -1,0 +1,15 @@
+Subject: You have an eviction court hearing on {Next Court Date}
+
+Hello {AppFirstName} {AppLastName}
+
+You are receiving this email because you have applied for eviction/rental help from Neighborhood Preservation, Inc.
+
+You have an eviction hearing on {Next Court Date} at the {Next Court Date Location}, room {Next Court Date Room}. Your case number is {Eviction Case Number}.
+
+You may have received U.S. Postal mail from the court containing a court date and location. That information may be incorrect.
+
+To verify your court date, you can call the Court Clerk at (???) ???-????. You can also view your case information at https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_doct.cp_dktrpt_frames?case_id={Eviction Case Number}.
+
+Please plan to arrive at court *at least* 15 minutes early to find parking and get to your courtroom.
+
+This message was sent by an automated system from npimemphis.org. Please do not reply. Thank you.
