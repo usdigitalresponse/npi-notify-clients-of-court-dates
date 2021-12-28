@@ -1,8 +1,10 @@
-﻿Case Id,AppFirstName,AppLastName,ApplicantEmail,Eviction Case Number,Next Court Date,Next Court Date Location,Next Court Date Room,Tenant Case Email Sent,Email For Automation,Case Status (In Neighborly)
-11114,Chris,Keith,chris.keith@gmail.com,2072531,3/31/2021,COURTHOUSE,DIV3,12/11/2021 2:48pm,chris.keith@gmail.com,Approved: Sent for legal
-11116,Christopher,Keith,chris.keith@gmail.com,1234566,3/29/2021,COURTHOUSE,DIV2,12/11/2021 2:48pm,chris.keith@gmail.com,Approved: Sent for legal
-11111,Chris,Mscera,chris@mcsera.org,Not Found,,,,,,
-11113,Duane,Eddy,,2071772,4/5/2021,,,,,
-11115,John,McClaughlin,,2073585,3/29/2021,,,,,
-11112,Chrisx,Keith,chrisxkeith@ckeith.us,,,COURTHOUSE,DIV4,,,
-11117,Chris2,Keith,chris.keith@gmail.com,2222222,3/29/2021,COURTHOUSE,DIV2,,,
+﻿Case Id,AppFirstName,AppLastName,ApplicantEmail,Eviction Case Number,Next Court Date,Next Court Date Location,Next Court Date Room,Tenant Case Email Sent,Email For Automation,Case Status (In Neighborly),Last Modified Time,test,Next Court Date Judge
+11114,Chris,Keith,chris.keith@gmail.com,2072531,3/31/2021,COURTHOUSE,DIV3,12/28/2021 11:12am,chris.keith@gmail.com,Approved: Sent for legal,12/28/2021 11:12am,,j1
+11116,Christopher,Keith,chris@mcsera.org,1234566,3/29/2021,COURTHOUSE,DIV2,,,Approved: Sent for legal,12/27/2021 4:27pm,,
+11111,Chris,Mscera,chris@mcsera.org,Not Found,,,,,,,12/11/2021 3:05pm,,
+11113,Duane,Eddy,,2071772,4/5/2021,,,,,,12/11/2021 10:13am,,
+11115,John,McLaughlin,,2073585,3/29/2021,,,,,,12/19/2021 11:16am,,
+11112,Chrisx,Keith,chrisxkeith@ckeith.us,,,COURTHOUSE,DIV4,,,,12/11/2021 3:05pm,,
+11117,Chris2,Keith,chris.keith@gmail.com,2222222,3/29/2021,COURTHOUSE,DIV2,,,,12/11/2021 3:06pm,,
+11118,Chris3,Keith3,chris@mscera.org,2073585,3/31/2021,COURTHOUSE,DIV3,12/28/2021 11:12am,chris@mscera.org,Approved: Sent for legal,12/28/2021 11:12am,,j2
+11119,Chris4,Keith4,chrisxkeith@ckeith.us,2073585,3/31/2021,COURTHOUSE,DIV3,12/28/2021 11:12am,chrisxkeith@ckeith.us,Approved: Sent for legal,12/28/2021 11:12am,,j3
