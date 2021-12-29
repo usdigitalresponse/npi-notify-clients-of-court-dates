@@ -1,12 +1,6 @@
 class App1 {
     runIt(query) {
-        const triggerColName = 'Tenant Case Email Triggered'
-        let alreadyMarkedRecords = query.records.filter(rec => {
-            return (rec.getCellValue('Email For Automation'))
-        })
-        for (let rec of alreadyMarkedRecords) {
-            table.updateRecordAsync(rec, {'Email For Automation' : ''})
-        }
+        const triggerColName = 'Tenant Case Email Triggered' // Manually replace in updateRecordAsync
         let filteredRecords = query.records.filter(rec => {
             let caseNumber = rec.getCellValue('Eviction Case Number')
             let status = rec.getCellValue('Case Status (In Neighborly)')
