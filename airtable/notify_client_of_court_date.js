@@ -1,5 +1,16 @@
 class App1 {
-    runIt(query) {
+    async setItUp(query) {
+        let alreadyMarkedRecords = query.records.filter(rec => {
+            return (rec.getCellValue('Email For Automation'))
+        })
+        let c1 = 0
+        for (let rec of alreadyMarkedRecords) {
+            table.updateRecordAsync(rec, {'Email For Automation' : ''})
+            c1++
+        }
+        console.log(c1 + ' Email For Automation value(s) cleared')
+    }
+    async runIt(query) {
         const triggerColName = 'Tenant Case Email Triggered' // Manually replace in updateRecordAsync
         let filteredRecords = query.records.filter(rec => {
             let caseNumber = rec.getCellValue('Eviction Case Number')
@@ -31,9 +42,11 @@ class App1 {
             table.updateRecordAsync(rec, {'Tenant Case Email Triggered' : now})
             c++
         }
-        console.log('Marked ' + c + ' applicants for automated email sending.');
+        console.log('Marked ' + c + ' applicant(s) for automated email sending.');
     }
 }
 let table = base.getTable('All Applicants');
 let query = await table.selectRecordsAsync({fields: table.fields});
-new App1().runIt(query);
+let app = new App1()
+await app.setItUp(query)
+await app.runIt(query)
