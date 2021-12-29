@@ -1,5 +1,6 @@
 class App1 {
     runIt(query) {
+        const triggerColName = 'Tenant Case Email Triggered'
         let alreadyMarkedRecords = query.records.filter(rec => {
             return (rec.getCellValue('Email For Automation'))
         })
@@ -20,7 +21,7 @@ class App1 {
             return (status_val.includes('Approved: Sent for legal') &&
                     caseNumber !== 'Not Found' &&
                     caseNumber !== '' &&
-                   !rec.getCellValue('Tenant Case Email Sent') &&
+                   !rec.getCellValue(triggerColName) &&
                     rec.getCellValue('ApplicantEmail') &&
                     rec.getCellValue('Next Court Date') &&
                     rec.getCellValue('Next Court Date Location') &&
@@ -33,7 +34,7 @@ class App1 {
             let now = new Date()
             let email = rec.getCellValue('ApplicantEmail')
             table.updateRecordAsync(rec, {'Email For Automation' : email})
-            table.updateRecordAsync(rec, {'Tenant Case Email Sent' : now})
+            table.updateRecordAsync(rec, {triggerColName : now})
             c++
         }
         console.log('Marked ' + c + ' applicants for automated email sending.');
