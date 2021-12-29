@@ -34,7 +34,7 @@ class App1 {
             let now = new Date()
             let email = rec.getCellValue('ApplicantEmail')
             table.updateRecordAsync(rec, {'Email For Automation' : email})
-            table.updateRecordAsync(rec, {triggerColName : now})
+            table.updateRecordAsync(rec, {'Tenant Case Email Triggered' : now})
             c++
         }
         console.log('Marked ' + c + ' applicants for automated email sending.');
