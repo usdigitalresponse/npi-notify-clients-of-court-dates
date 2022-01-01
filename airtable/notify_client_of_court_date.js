@@ -2,8 +2,10 @@ class TextSender {
     httpPost(url, body, rawPhone) {
         var xhr = new XMLHttpRequest();
         xhr.open("POST", url);
-        xhr.setRequestHeader("Content-Type", "application/html");
+        xhr.setRequestHeader("Accept", "application/xml");
+        xhr.setRequestHeader("Content-Type", "application/xml");
         xhr.onreadystatechange = function () {
+            console.log('xhr.responseText: ' + xhr.responseText + ' for ' + rawPhone)
             if (xhr.readyState === 4) {
                 if (!xhr.responseText.includes('<ok/>')) {
                     console.log('Error: ' + xhr.responseText + ' for ' + rawPhone)
@@ -126,4 +128,4 @@ let table = base.getTable('All Applicants');
 let query = await table.selectRecordsAsync({fields: table.fields});
 let app = new App1()
 await app.triggerEmails(query)
-// await app.runIt('ApplicantMobile')
+// await app.runIt(query, 'ApplicantMobile')
