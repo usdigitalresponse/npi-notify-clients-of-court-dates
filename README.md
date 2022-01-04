@@ -1,20 +1,11 @@
 # NPI: Notify Clients of Court Dates
 
-This project will help [NPI](https://npimemphis.org/) notify people who have eviction proceedings of their court date and location.
+# This code is not used anywhere
 
-## Setup & Installation
+- A python scraper in AWS obviates the Java scraper
+- No-code automations in Airtable obviate the Javascript app
 
-*More precise instructions to come.*
-1. Java
-2. Maven
-3. Selenium driver(s)
-
-## Developing Locally
-
-Steps from Setup *above* + Visual Studio Code
-
-## Code of Conduct
-
+***
 This repository falls under [U.S. Digital Response’s Code of Conduct](./CODE_OF_CONDUCT.md), and we will hold all participants in issues, pull requests, discussions, and other spaces related to this project to that Code of Conduct. Please see [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) for the full code.
 
 ## Contributing
