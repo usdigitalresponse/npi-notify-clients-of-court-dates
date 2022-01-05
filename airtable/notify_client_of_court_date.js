@@ -26,7 +26,8 @@ class TextSender {
             let theDate = rec.getCellValue('Next Court Date')
             let theLoc = rec.getCellValue('Next Court Date Location')
             let theRoom = rec.getCellValue('Next Court Date Room') 
-            let html = `<sms>
+            let html = `<?xml version="1.0"?>
+<sms>
     <auth_key></auth_key>
     <command>send_message</command>
     <account_id></account_id>
