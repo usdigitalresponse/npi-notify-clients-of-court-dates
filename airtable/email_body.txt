@@ -5,29 +5,42 @@ Field valuesAppLastName
 ﻿,
 
 
-You are receiving this email because you have applied for emergency rental assistance from the Memphis and Shelby County Emergency Rental Assistance program.
+You recently applied for emergency rental assistance from [NPI Memphis](https://npimemphis.org). We have an update about the court date for your eviction hearing.
 
 
-You have a court eviction hearing on ﻿1.
+### Updated Court Info
+
+- **Date:** ﻿1.
 Field valuesNext Court Date
-﻿ in building ﻿1.
+﻿
+
+- **Location:** ﻿1.
 Field valuesNext Court Date Location
-﻿, room ﻿1.
+﻿, Room ﻿1.
 Field valuesNext Court Date Room
-﻿. Your case number is ﻿1.
+﻿
+
+- **Your case number:** ﻿1.
 Field valuesEviction Case Number
-﻿.
+﻿
 
 
-You may have received U.S. Postal mail from the court containing a court date and location. That information may be incorrect.
+This is the latest information from Memphis county records. If you received U.S. Postal mail from the court, that information may be incorrect. Please verify your court date with the link or phone number below.
 
 
-To verify your court date, you can call the Court Clerk at (???) ????-????. You can also view your case information at https://gscivildata.shelbycountytn.gov/pls/gnweb/ck\_public\_qry\_doct.cp\_dktrpt_frames?case_id=﻿1.
+### To Verify Your Court Date
+
+- [View your case information](https://gscivildata.shelbycountytn.gov/pls/gnweb/ck\_public\_qry\_doct.cp\_dktrpt\_frames?case_id=﻿1.
 Field valuesEviction Case Number
-﻿.
+﻿)
+
+- Call the County Court Clerk at (???) ????-????.
 
 
-Please plan to arrive at court *at least* 15 minutes early to find parking and get to your courtroom.
+Try to arrive at court ***at least*** 15 minutes early to find parking and get to your courtroom.
 
 
-This message was sent by an automated system from https://npimemphis.org. Please do not reply. Thank you.
+Here are a [few resources](https://lgbtgny.legal.io/guide/579a7dd4e4a9944448000006/Housing-Guides) to help you know what to expect in court, and what to do next.
+
+
+**Please do not reply to this email. ** This message was sent by an automated system from https://npimemphis.org. Thank you.
