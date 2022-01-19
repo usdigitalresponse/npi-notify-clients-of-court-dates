@@ -36,8 +36,6 @@ This message was sent by an automated system from https://npimemphis.org. Please
             console.log('Error: ' + ret + ' for ' + rawPhone)
             return false
         }
-        let now = new Date()
-        table.updateRecordAsync(rec, {'Tenant Case SMS Sent' : now})
         return true
     }
 }
@@ -59,13 +57,9 @@ class App1 {
             if (!judge || judge === 'unassigned') {
                 judge = ''
             }
-            let sentStatusColName;
-            sentStatusColName = 'Tenant Case SMS Sent'
-            let canSend = !rec.getCellValue(sentStatusColName)
             return (status_val.includes('Approved: Sent for legal') &&
                     caseNumber !== 'Not Found' &&
                     caseNumber !== '' &&
-                    canSend &&
                     rec.getCellValue('Next Court Date') &&
                     rec.getCellValue('Next Court Date Location') &&
                     rec.getCellValue('Next Court Date Room') &&
