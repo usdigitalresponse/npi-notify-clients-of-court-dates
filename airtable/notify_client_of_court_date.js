@@ -1,6 +1,6 @@
 class TextSender {
     async sendOne(rec) {
-        let rawPhone = rec.getCellValue('ApplicantMobile')
+        let rawPhone = rec.getCellValue('ApplicantPhone')
         let ph = rawPhone.replace(/\D/g, '')
         if (ph.length !== 10) {
             console.log('Bad phone number: ' + rawPhone)
@@ -64,7 +64,7 @@ class App1 {
                     rec.getCellValue('Next Court Date Location') &&
                     rec.getCellValue('Next Court Date Room') &&
                     judge !== '' &&
-                    rec.getCellValue('ApplicantMobile')
+                    rec.getCellValue('ApplicantPhone')
                    )
         })
         let c = 0
