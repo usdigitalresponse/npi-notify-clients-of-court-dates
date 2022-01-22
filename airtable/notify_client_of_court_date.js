@@ -34,6 +34,7 @@ This message was sent by an automated system from https://npimemphis.org. Please
         let ret = await response.text();
         if (!ret.includes('<ok/>')) {
             console.log('Error: ' + ret + ' for ' + rawPhone)
+            console.log('Would have texted: ' + xml)
             return false
         }
         return true
