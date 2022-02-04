@@ -38,14 +38,14 @@ public class DataScraper {
       System.out.println(this.rowData());
     }
 }
-/*  private void doSleep(int seconds) {
+  private void doSleep(int seconds) {
     try {
       Thread.sleep(seconds * 1000);
     } catch (InterruptedException e) {
       // TO DO Auto-generated catch block
       e.printStackTrace();
     }
-  } */
+  }
   void getCourtData(ClientRowData crd) {
     crd.courtDate = driver.findElement(By.cssSelector("a:nth-child(5) td:nth-child(2)")).getText();
     crd.room = driver.findElement(By.cssSelector("a:nth-child(5) td:nth-child(3)")).getText();
@@ -113,6 +113,17 @@ void fillInDefendantInfo(Integer rowNumber) {
     final String defendantAddress = driver.findElement(By.cssSelector(
         "a:nth-child(6) tr:nth-child(6) > td:nth-child(2)")).getText();
     crd.clientAddress = defendantAddress; 
+  }
+  public void showSpecificCases() {
+    if (driver == null) {
+      driver = new ChromeDriver();
+    }
+    final String url = "https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_doct.cp_dktrpt_frames?case_id=";
+    final String[] caseNumbers = new String[]{"2101305"};
+    for (String s : caseNumbers) {
+      driver.get(url + s);
+      this.doSleep(30);
+    }
   }
   private void getDefendantInfoFromCase(Integer rowNumber) {
     ClientRowData crd = new ClientRowData();
@@ -238,6 +249,6 @@ void fillInDefendantInfo(Integer rowNumber) {
     System.err.println("0,duration(MM:SS)," + elapsed);
   }
   public static void main(String[] args) {
-      new DataScraper().scrapeData(args);
+      new DataScraper().showSpecificCases(); // scrapeData(args);
   }
 }
