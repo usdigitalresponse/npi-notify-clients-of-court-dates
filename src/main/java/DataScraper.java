@@ -119,10 +119,11 @@ void fillInDefendantInfo(Integer rowNumber) {
       driver = new ChromeDriver();
     }
     final String url = "https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_doct.cp_dktrpt_frames?case_id=";
-    final String[] caseNumbers = new String[]{"2101305"};
+    final String[] caseNumbers = new String[]{
+    };
     for (String s : caseNumbers) {
       driver.get(url + s);
-      this.doSleep(30);
+      this.doSleep(15);
     }
   }
   private void getDefendantInfoFromCase(Integer rowNumber) {
