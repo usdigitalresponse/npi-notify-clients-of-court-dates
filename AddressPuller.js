@@ -39,6 +39,8 @@ class AddressPuller {
 }
 class TransformerToAirtable {
     constructor() {}
+
+    // for viewing possible field values
     displayValues(sourceData) {
         const parties = new Set()
         const docket_descriptions = new Set()
@@ -62,22 +64,22 @@ class TransformerToAirtable {
             i++
         }
     }
-    extractFields(party) {
+    extractFields(party, partyType) {
         if (!party) {
             return new Object()
         }
         let ret = new Object()
         let names = party.name.split(', ')
         if (names.length > 1) {
-            ret.appFirstName = names[1]
+            ret[ partyType + 'FirstName' ] = names[1]
         }
-        ret.appLastName = names[0]
+        ret[ partyType + 'LastName' ] = names[0]
         let addressParts = party.address.split('\n')
-        ret.appAddress = addressParts[0]
+        ret[ partyType + 'Address' ] = addressParts[0]
         addressParts = addressParts[1].split(' ') 
-        ret.appCity = addressParts[0]
-        ret.appState = addressParts[1]
-        ret.appZip = addressParts[2]
+        ret[ partyType + 'City' ] = addressParts[0]
+        ret[ partyType + 'State' ] = addressParts[1]
+        ret[ partyType + 'Zip' ] = addressParts[2]
         return ret
     }
     createRow(evictionCase) {
@@ -106,8 +108,8 @@ class TransformerToAirtable {
         } else if (proSe) {
             landlord = proSe
         }
-        let defendantObj = this.extractFields(defendant)
-        let landlordObj = this.extractFields(landlord)
+        let defendantObj = this.extractFields(defendant, 'app')
+        let landlordObj = this.extractFields(landlord, 'landlord')
         return {
             ...ret,
             ...defendantObj,
@@ -116,11 +118,9 @@ class TransformerToAirtable {
     }
     doTransform(sourceData) {
         let ret = []
-//        this.displayValues(sourceData)
         for (const evictionCase of sourceData) {
             let r = this.createRow(evictionCase)
-            console.log(r)
-//            ret.push(r)
+            ret.push(r)
         }
         return ret
     }
