@@ -38,13 +38,95 @@ class AddressPuller {
     }
 }
 class TransformerToAirtable {
-    doTransform(sourceData) {
-        let ret = []
+    constructor() {}
+    displayValues(sourceData) {
+        const parties = new Set()
+        const docket_descriptions = new Set()
+        for (const evictionCase of sourceData) {
+            for (const party of evictionCase.parties) {
+                parties.add(party.type)
+            }
+            for (const docket_entry of evictionCase.docket_entries) {
+                docket_descriptions.add(docket_entry.description)
+            }
+        }
+        console.log('Total cases: ' + sourceData.length)
+        let i = 0
+        for (const p of parties) {
+            console.log(i + ' ' + p)
+            i++
+        }
+        i = 0
+        for (const d of docket_descriptions) {
+            console.log(i + ' ' + d)
+            i++
+        }
+    }
+    extractFields(party) {
+        if (!party) {
+            return new Object()
+        }
+        let ret = new Object()
+        let names = party.name.split(', ')
+        if (names.length > 1) {
+            ret.appFirstName = names[1]
+        }
+        ret.appLastName = names[0]
+        let addressParts = party.address.split('\n')
+        ret.appAddress = addressParts[0]
+        addressParts = addressParts[1].split(' ') 
+        ret.appCity = addressParts[0]
+        ret.appState = addressParts[1]
+        ret.appZip = addressParts[2]
         return ret
     }
-    loadTable(resultData) {
+    createRow(evictionCase) {
+        let ret = new Object()
+        ret.evictionCaseNumber = evictionCase.case_num
+        ret.dateFiled = evictionCase.filing_date
+        ret.caseTitle = evictionCase.title
+        ret.settlementDate = null
+        let defendant = null
+        let plaintiff = null
+        let attorney = null
+        let proSe = null
+        for (const party of evictionCase.parties) {
+            switch (party.type) {
+                case "DEFENDANT" : defendant = party; break
+                case "PLAINTIFF" : plaintiff = party; break
+                case "ATTORNEY FOR PLAINTIFF" : attorney = party; break
+                case "PRO SE LITIGANT" : proSe = party; break
+            }
+        }
+        let landlord
+        if (plaintiff) {
+            landlord = plaintiff
+        } else if (attorney) {
+            landlord = attorney
+        } else if (proSe) {
+            landlord = proSe
+        }
+        let defendantObj = this.extractFields(defendant)
+        let landlordObj = this.extractFields(landlord)
+        return {
+            ...ret,
+            ...defendantObj,
+            ...landlordObj
+        }
+    }
+    doTransform(sourceData) {
+        let ret = []
+//        this.displayValues(sourceData)
+        for (const evictionCase of sourceData) {
+            let r = this.createRow(evictionCase)
+            console.log(r)
+//            ret.push(r)
+        }
+        return ret
+    }
+    loadTable(resultData) {        
+        let tableName = theTableName
 //        this.clearTable()
-
     }
     transform() {
         let sourceData = theData // new AddressPuller(theHostName, thePath).pull()
