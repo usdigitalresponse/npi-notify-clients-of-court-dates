@@ -89,7 +89,6 @@ class TransformerToAirtable {
         topLevelCaseData.evictionCaseNumber = evictionCase.case_num
         topLevelCaseData.dateFiled = evictionCase.filing_date
         topLevelCaseData.caseTitle = evictionCase.title
-        topLevelCaseData.settlementDate = null
         let defendant = null
         let plaintiff = null
         let attorney = null
@@ -110,6 +109,12 @@ class TransformerToAirtable {
         } else if (proSe) {
             landlord = proSe
         }
+        topLevelCaseData.settlementDate = null
+        for (const docket_entry of evictionCase.docket_entries) {
+            if (docket_entry.description === 'POST JUDGMENT ORDER') {
+                topLevelCaseData.settlementDate = docket_entry.date
+            }
+        }
         let defendantObj = this.extractFields(defendant, 'app')
         let landlordObj = this.extractFields(landlord, 'landlord')
         return {
@@ -126,9 +131,11 @@ class TransformerToAirtable {
         }
         console.log('Processed ' + ret.length + ' records.')
         console.log('First record: ' + JSON.stringify(ret[0]))
+        console.log('Last record: ' + JSON.stringify(ret[ret.length - 1]))
         return ret
     }
     loadTable(resultData) {
+        // Lookup, call update if record exists, insert if it doesn't.
     }
     transform() {
         let sourceData = JSON.parse(fs.readFileSync('private.json')) // new AddressPuller(theHostName, thePath).pull()
