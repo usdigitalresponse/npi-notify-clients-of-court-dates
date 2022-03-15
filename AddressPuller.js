@@ -134,13 +134,28 @@ class TransformerToAirtable {
         console.log('Last record: ' + JSON.stringify(ret[ret.length - 1]))
         return ret
     }
-    loadTable(resultData) {
-        // Lookup, call update if record exists, insert if it doesn't.
+    objectToMap(evictionCase) {
+        let newArray = Object.entries(evictionCase)
+        let map = new Map(newArray)
+        return map
+    }
+    async loadTable(resultData) {
+        let table = base.getTable("PostCard Addresses");
+        for (evictionCase of resultData) {
+            let theMap = this.objectToMap(evictionCase)
+            let queryResult = await table.selectRecordsAsync();
+            let record = queryResult.getRecord(evictionCase.case_num)
+            if (record) {
+                await table.updateRecordAsync(theMap);
+            } else {
+                await table.createRecordAsync(theMap);
+            }
+        }
     }
     transform() {
         let sourceData = JSON.parse(fs.readFileSync('private.json')) // new AddressPuller(theHostName, thePath).pull()
         let resultData = this.doTransform(sourceData)
-        this.loadTable(resultData)
+        await this.loadTable(resultData)
     }
 }
 new TransformerToAirtable().transform()
