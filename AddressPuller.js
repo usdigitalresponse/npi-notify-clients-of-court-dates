@@ -1,3 +1,5 @@
+'use strict';
+const fs = require('fs');
 const https = require('https')
 
 class Getter {
@@ -83,11 +85,11 @@ class TransformerToAirtable {
         return ret
     }
     createRow(evictionCase) {
-        let ret = new Object()
-        ret.evictionCaseNumber = evictionCase.case_num
-        ret.dateFiled = evictionCase.filing_date
-        ret.caseTitle = evictionCase.title
-        ret.settlementDate = null
+        let topLevelCaseData = new Object()
+        topLevelCaseData.evictionCaseNumber = evictionCase.case_num
+        topLevelCaseData.dateFiled = evictionCase.filing_date
+        topLevelCaseData.caseTitle = evictionCase.title
+        topLevelCaseData.settlementDate = null
         let defendant = null
         let plaintiff = null
         let attorney = null
@@ -95,9 +97,9 @@ class TransformerToAirtable {
         for (const party of evictionCase.parties) {
             switch (party.type) {
                 case "DEFENDANT" : defendant = party; break
-                case "PLAINTIFF" : plaintiff = party; break
-                case "ATTORNEY FOR PLAINTIFF" : attorney = party; break
-                case "PRO SE LITIGANT" : proSe = party; break
+                case "PLAINTIFF" : plaintiff = party; topLevelCaseData.plaintiffType = party.type; break
+                case "ATTORNEY FOR PLAINTIFF" : attorney = party;  topLevelCaseData.plaintiffType = party.type; break
+                case "PRO SE LITIGANT" : proSe = party;  topLevelCaseData.plaintiffType = party.type; break
             }
         }
         let landlord
@@ -111,7 +113,7 @@ class TransformerToAirtable {
         let defendantObj = this.extractFields(defendant, 'app')
         let landlordObj = this.extractFields(landlord, 'landlord')
         return {
-            ...ret,
+            ...topLevelCaseData,
             ...defendantObj,
             ...landlordObj
         }
@@ -122,14 +124,14 @@ class TransformerToAirtable {
             let r = this.createRow(evictionCase)
             ret.push(r)
         }
+        console.log('Processed ' + ret.length + ' records.')
+        console.log('First record: ' + JSON.stringify(ret[0]))
         return ret
     }
-    loadTable(resultData) {        
-        let tableName = theTableName
-//        this.clearTable()
+    loadTable(resultData) {
     }
     transform() {
-        let sourceData = theData // new AddressPuller(theHostName, thePath).pull()
+        let sourceData = JSON.parse(fs.readFileSync('private.json')) // new AddressPuller(theHostName, thePath).pull()
         let resultData = this.doTransform(sourceData)
         this.loadTable(resultData)
     }
