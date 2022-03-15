@@ -155,7 +155,7 @@ class TransformerToAirtable {
     transform() {
         let sourceData = JSON.parse(fs.readFileSync('private.json')) // new AddressPuller(theHostName, thePath).pull()
         let resultData = this.doTransform(sourceData)
-        await this.loadTable(resultData)
+//        await this.loadTable(resultData)
     }
 }
 new TransformerToAirtable().transform()
