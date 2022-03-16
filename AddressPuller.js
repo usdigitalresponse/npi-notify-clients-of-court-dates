@@ -111,7 +111,7 @@ class TransformerToAirtable {
         }
         topLevelCaseData.settlementDate = null
         for (const docket_entry of evictionCase.docket_entries) {
-            if (docket_entry.description === 'POST JUDGMENT ORDER') {
+            if (docket_entry.description === 'POSSESSION $___& COST FED') {
                 topLevelCaseData.settlementDate = docket_entry.date
             }
         }
