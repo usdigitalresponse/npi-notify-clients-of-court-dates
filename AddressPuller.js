@@ -40,7 +40,10 @@ class AddressPuller {
     }
 }
 class TransformerToAirtable {
-    constructor() {}
+    constructor() {
+        this.minDate = new Date(3000, 0, 1)
+        this.maxDate = new Date(1970, 0, 1)    
+    }
 
     // for viewing possible field values
     displayValues(sourceData) {
@@ -79,10 +82,17 @@ class TransformerToAirtable {
         theMap['ADDRESS 1'] = addressParts[0]
         addressParts = addressParts[1].split(' ') 
         theMap['CITY' ] = addressParts[0]
-        theMap['STATE' ] =addressParts[1]
+        theMap['STATE' ] = addressParts[1]
         theMap['ZIP CODE' ] = addressParts[2]
     }
     createRow(evictionCase) {
+        let thisDate = Date.parse(evictionCase.filing_date)
+        if (thisDate < this.minDate) {
+            this.minDate = new Date(evictionCase.filing_date)
+        }
+        if (thisDate > this.maxDate) {
+            this.maxDate = new Date(evictionCase.filing_date)
+        }
         let tenantMap = {
             'Eviction Case Number' : evictionCase.case_num,
             'Filed Date' : evictionCase.filing_date,
@@ -150,6 +160,8 @@ class TransformerToAirtable {
         console.log('Processed ' + tenants.length + ' records.')
         console.log('First tenant: ' + JSON.stringify(tenants[0]))
         console.log('First landlord: ' + JSON.stringify(landlords[0]))
+        console.log('min Filed Date: ' + this.minDate.toString())
+        console.log('max Filed Date: ' + this.maxDate.toString())
 //        await this.loadTable(tenants, 'Tenant Postcard Addresses', 'Eviction Case Number')
 //        await this.loadTable(landlords, 'Landlords', 'eid')
     }
