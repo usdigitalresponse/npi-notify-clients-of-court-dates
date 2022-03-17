@@ -66,29 +66,28 @@ class TransformerToAirtable {
             i++
         }
     }
-    extractFields(party, partyType) {
+    extractFields(theMap, party) {
         if (!party) {
-            return new Object()
+            return
         }
-        let ret = new Object()
         let names = party.name.split(', ')
         if (names.length > 1) {
-            ret[ partyType + 'FirstName' ] = names[1]
+            theMap['FIRST NAME'] = names[1]
         }
-        ret[ partyType + 'LastName' ] = names[0]
+        theMap['LAST NAME'] =names[0]
         let addressParts = party.address.split('\n')
-        ret[ partyType + 'Address' ] = addressParts[0]
+        theMap['ADDRESS 1'] = addressParts[0]
         addressParts = addressParts[1].split(' ') 
-        ret[ partyType + 'City' ] = addressParts[0]
-        ret[ partyType + 'State' ] = addressParts[1]
-        ret[ partyType + 'Zip' ] = addressParts[2]
-        return ret
+        theMap['CITY' ] = addressParts[0]
+        theMap['STATE' ] =addressParts[1]
+        theMap['ZIP CODE' ] = addressParts[2]
     }
     createRow(evictionCase) {
-        let topLevelCaseData = new Object()
-        topLevelCaseData.evictionCaseNumber = evictionCase.case_num
-        topLevelCaseData.dateFiled = evictionCase.filing_date
-        topLevelCaseData.caseTitle = evictionCase.title
+        let tenantMap = {
+            'Eviction Case Number' : evictionCase.case_num,
+            'Filed Date' : evictionCase.filing_date,
+            'Case Title' : evictionCase.title
+        }
         let defendant = null
         let plaintiff = null
         let attorney = null
@@ -96,9 +95,9 @@ class TransformerToAirtable {
         for (const party of evictionCase.parties) {
             switch (party.type) {
                 case "DEFENDANT" : defendant = party; break
-                case "PLAINTIFF" : plaintiff = party; topLevelCaseData.plaintiffType = party.type; break
-                case "ATTORNEY FOR PLAINTIFF" : attorney = party;  topLevelCaseData.plaintiffType = party.type; break
-                case "PRO SE LITIGANT" : proSe = party;  topLevelCaseData.plaintiffType = party.type; break
+                case "PLAINTIFF" : plaintiff = party;  break
+                case "ATTORNEY FOR PLAINTIFF" : attorney = party; break
+                case "PRO SE LITIGANT" : proSe = party; break
             }
         }
         let landlord
@@ -109,53 +108,50 @@ class TransformerToAirtable {
         } else if (proSe) {
             landlord = proSe
         }
-        topLevelCaseData.settlementDate = null
         for (const docket_entry of evictionCase.docket_entries) {
             if (docket_entry.description === 'POSSESSION $___& COST FED') {
-                topLevelCaseData.settlementDate = docket_entry.date
+                tenantMap['Settlement Date'] = docket_entry.date
+                break
             }
         }
-        let defendantObj = this.extractFields(defendant, 'app')
-        let landlordObj = this.extractFields(landlord, 'landlord')
-        return {
-            ...topLevelCaseData,
-            ...defendantObj,
-            ...landlordObj
+        this.extractFields(tenantMap, defendant)
+        let landlordMap = {
+            'eid' : landlord.eid,
+            'Filed Date' : evictionCase.filing_date
         }
+        this.extractFields(landlordMap, landlord)
+        return [tenantMap, landlordMap]
     }
     doTransform(sourceData) {
-        let ret = []
+        let tenants = []
+        let landlords = []
         for (const evictionCase of sourceData) {
-            let r = this.createRow(evictionCase)
-            ret.push(r)
+            let [ten, lan] = this.createRow(evictionCase)
+            tenants.push(ten)
+            landlords.push(lan)
         }
-        console.log('Processed ' + ret.length + ' records.')
-        console.log('First record: ' + JSON.stringify(ret[0]))
-        console.log('Last record: ' + JSON.stringify(ret[ret.length - 1]))
-        return ret
+        return [tenants, landlords]
     }
-    objectToMap(evictionCase) {
-        let newArray = Object.entries(evictionCase)
-        let map = new Map(newArray)
-        return map
-    }
-    async loadTable(resultData) {
-        let table = base.getTable("PostCard Addresses");
-        for (evictionCase of resultData) {
-            let theMap = this.objectToMap(evictionCase)
+    async loadTable(parties, tableName, keyName) {
+        let table = base.getTable(tableName);
+        for (party of parties) {
             let queryResult = await table.selectRecordsAsync();
-            let record = queryResult.getRecord(evictionCase.case_num)
+            let record = queryResult.getRecord(keyName)
             if (record) {
-                await table.updateRecordAsync(theMap);
+                await table.updateRecordAsync(party);
             } else {
-                await table.createRecordAsync(theMap);
+                await table.createRecordAsync(party);
             }
         }
     }
     transform() {
         let sourceData = JSON.parse(fs.readFileSync('private.json')) // new AddressPuller(theHostName, thePath).pull()
-        let resultData = this.doTransform(sourceData)
-//        await this.loadTable(resultData)
+        let [tenants, landlords] = this.doTransform(sourceData)
+        console.log('Processed ' + tenants.length + ' records.')
+        console.log('First tenant: ' + JSON.stringify(tenants[0]))
+        console.log('First landlord: ' + JSON.stringify(landlords[0]))
+//        await this.loadTable(tenants, 'Tenant Postcard Addresses', 'Eviction Case Number')
+//        await this.loadTable(landlords, 'Landlords', 'eid')
     }
 }
 new TransformerToAirtable().transform()
