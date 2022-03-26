@@ -3,6 +3,7 @@
 from scrapers.court import case_id, case
 import time
 from datetime import datetime
+from datetime import timedelta
 from typing import List
 
 class AddressScraper:
@@ -52,12 +53,20 @@ class AddressScraper:
     def findSettlements(self, case):
         for entry in case['docket_entries']:
             if entry['description'] == 'POSSESSION $___& COST FED':
-                print(case['description']['case_num'] + "|" + str(entry))
+                settledDate = entry['date']
+                filedDate = case['description']['filing_date']
+                delta = settledDate - filedDate
+                print(case['description']['case_num'] + "|" + str(delta.days))
     def run(self):
-        a_z_cases = {}
-        self.getByAlpha("a", "z", a_z_cases)
-        for case_num in list(a_z_cases):
-            self.findSettlements(a_z_cases[case_num])
+        current_time = datetime.now()
+        for i in range(180):
+            self.theDate = current_time.strftime("%Y-%m-%d")
+            a_z_cases = {}
+            self.getByAlpha("a", "z", a_z_cases)
+            for case_num in list(a_z_cases):
+                self.findSettlements(a_z_cases[case_num])
+            current_time = current_time - timedelta(days=1)
+            time.sleep(60 * 2)
 
 if __name__ == "__main__":
     AddressScraper().run()
