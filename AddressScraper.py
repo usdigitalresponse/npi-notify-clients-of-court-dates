@@ -52,7 +52,7 @@ class AddressScraper:
     def findSettlements(self, case):
         for entry in case['docket_entries']:
             if entry['description'] == 'POSSESSION $___& COST FED':
-                print(case['description']['case_num'] + "|" + entry)
+                print(case['description']['case_num'] + "|" + str(entry))
     def run(self):
         a_z_cases = {}
         self.getByAlpha("a", "z", a_z_cases)
