@@ -21,24 +21,23 @@ class AddressScraper:
             hashByCaseNumber[c['Eviction Case Number']] = c['Case Title']
         return [numCases, round(end - start)]
     def getByAlpha(self, startLetter, endLetter, hashByCaseNumber):
-        total = 0
-        # totalstart = time.time()
+        totalstart = time.time()
         for i in range(ord(startLetter), ord(endLetter) + 1):
             letter = chr(i)
-            retVals = self.sendQuery(self.theDate, letter, hashByCaseNumber)
-            # self.log(letter + "," + self.theDate + "," + str(retVals[0]) + "," + str(retVals[1]))
-            total += retVals[0]
-        # totalEnd = time.time()
-        # self.log(startLetter + "-" + endLetter + "," + self.theDate + "," +
-        #        str(round(totalEnd - totalstart)) + "," + str(total))
+            self.sendQuery(self.theDate, letter, hashByCaseNumber)
+        totalEnd = time.time()
+        totalSeconds = int(round(totalEnd - totalstart))
+        minutes = round(totalSeconds / 60)
+        seconds = round(totalSeconds % 60)
+        elapsedTime = '{0:0>2}:{1:0>2}'.format(minutes, seconds)
+        self.log(startLetter + "-" + endLetter + "," + self.theDate + "," +
+                elapsedTime)
     def getByWildCard(self):
         wildcard_cases = {}
         retVals = self.sendQuery(self.theDate, "*", wildcard_cases)
         self.log("*," + self.theDate + "," + str(retVals[0]) + "," + str(retVals[1]))
         return wildcard_cases
-    def run(self):
-        a_z_cases = {}
-        self.getByAlpha("a", "z", a_z_cases)
+    def compare_scraping(self, a_z_cases):
         wildcard_cases = self.getByWildCard()
         for key in list(wildcard_cases):
             msg = ''
@@ -47,7 +46,9 @@ class AddressScraper:
             else:
                 msg = '___'
             print(msg + "," + key + "," + wildcard_cases[key])
-
+    def run(self):
+        a_z_cases = {}
+        self.getByAlpha("a", "z", a_z_cases)
 
 if __name__ == "__main__":
     AddressScraper().run()
