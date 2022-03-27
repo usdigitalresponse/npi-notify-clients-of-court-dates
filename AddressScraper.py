@@ -8,8 +8,9 @@ from typing import List
 
 class AddressScraper:
     def __init__(self):
-        self.theDate = "2021-05-10"
+        self.theDate = "2021-06-09"
         self.caseScraper = case.CaseScraper()
+        self.errors = []
     def log(self, message):
         timeTag = datetime.now()
         print('"' + str(timeTag) + '",' + message)
@@ -37,7 +38,7 @@ class AddressScraper:
             try:
                 self.sendQuery(self.theDate, letter, hashByCaseNumber)
             except  Exception as e:
-                self.log('Letter: ' + letter + ', date: ' + self.theDate + ', Exception: ' + str(e))
+                self.errors.append('Letter: ' + letter + ', date: ' + self.theDate + ', Exception: ' + str(e))
         # self.logProgress(totalStart, startLetter, endLetter, len(hashByCaseNumber))
     def getByWildCard(self):
         wildcard_cases = {}
@@ -71,8 +72,9 @@ class AddressScraper:
                 self.findSettlements(a_z_cases[case_num])
             current_time = current_time + timedelta(days = 1)
             self.theDate = current_time.strftime("%Y-%m-%d")
-            time.sleep(60)
         self.log('Ended')
+        for s in self.errors:
+            self.log(s)
 
 if __name__ == "__main__":
     AddressScraper().run()
