@@ -34,7 +34,10 @@ class AddressScraper:
         totalStart = time.time()
         for i in range(ord(startLetter), ord(endLetter) + 1):
             letter = chr(i)
-            self.sendQuery(self.theDate, letter, hashByCaseNumber)
+            try:
+                self.sendQuery(self.theDate, letter, hashByCaseNumber)
+            except  Exception as e:
+                self.log('Letter: ' + letter + ', date: ' + self.theDate + ', Exception: ' + str(e))
         # self.logProgress(totalStart, startLetter, endLetter, len(hashByCaseNumber))
     def getByWildCard(self):
         wildcard_cases = {}
@@ -56,17 +59,20 @@ class AddressScraper:
                 settledDate = entry['date']
                 filedDate = case['description']['filing_date']
                 delta = settledDate - filedDate
-                print(case['description']['case_num'] + "|" + str(delta.days))
+                print(case['description']['case_num'] + "," + str(settledDate) + ','
+                        + str(filedDate) + ',' + str(delta.days))
     def run(self):
-        current_time = datetime.now()
-        for i in range(180):
-            self.theDate = current_time.strftime("%Y-%m-%d")
+        self.log('Started')
+        current_time = datetime. strptime(self.theDate, '%Y-%m-%d')
+        for i in range(30):
             a_z_cases = {}
             self.getByAlpha("a", "z", a_z_cases)
             for case_num in list(a_z_cases):
                 self.findSettlements(a_z_cases[case_num])
-            current_time = current_time - timedelta(days=1)
-            time.sleep(60 * 2)
+            current_time = current_time + timedelta(days = 1)
+            self.theDate = current_time.strftime("%Y-%m-%d")
+            time.sleep(60)
+        self.log('Ended')
 
 if __name__ == "__main__":
     AddressScraper().run()
