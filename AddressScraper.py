@@ -8,7 +8,7 @@ from typing import List
 
 class AddressScraper:
     def __init__(self):
-        self.theDate = "2021-06-09"
+        self.theDate = "2021-07-01"
         self.caseScraper = case.CaseScraper()
         self.errors = []
     def log(self, message):
@@ -60,12 +60,12 @@ class AddressScraper:
                 settledDate = entry['date']
                 filedDate = case['description']['filing_date']
                 delta = settledDate - filedDate
-                print(case['description']['case_num'] + "," + str(settledDate) + ','
+                self.log(case['description']['case_num'] + "," + str(settledDate) + ','
                         + str(filedDate) + ',' + str(delta.days))
     def run(self):
         self.log('Started')
         current_time = datetime. strptime(self.theDate, '%Y-%m-%d')
-        for i in range(30):
+        for i in range(31):
             a_z_cases = {}
             self.getByAlpha("a", "z", a_z_cases)
             for case_num in list(a_z_cases):
