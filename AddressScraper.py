@@ -16,7 +16,7 @@ class AddressScraper:
         self.errors = []
         self.MAX_DAYS = 260
         self.startLetter = 'a'
-        self.endLetter = 'b'
+        self.endLetter = 'z'
         self.DATE_FORMAT = '%Y-%m-%d'
         self.theDate = datetime.now().strftime(self.DATE_FORMAT)
         self.numDays = 7
@@ -71,7 +71,7 @@ class AddressScraper:
                 self.sendQuery(self.theDate, letter, hashByCaseNumber)
             except  Exception as e:
                 self.errors.append('Letter: ' + letter + ', date: ' + self.theDate + ', Exception: ' + str(e))
-        # self.logProgress(totalStart, startLetter, endLetter, len(hashByCaseNumber))
+        self.logProgress(totalStart, startLetter, endLetter, len(hashByCaseNumber))
     def findSettlements(self, case):
         for entry in case['docket_entries']:
             if entry['description'] == 'POSSESSION $___& COST FED':
@@ -87,31 +87,42 @@ class AddressScraper:
         for i in range(len(addresses) - 1):
             address1 = address1 + ',' + addresses[i]
         cityStateZip = addresses[len(addresses) - 1]
-        [city, state, theZip] = cityStateZip.split(' ')
+        if len(cityStateZip.split(' ')) == 3:
+            [city, state, theZip] = cityStateZip.split(' ')
+        else:
+            self.errors.append("Unable to split city/state/zip from: " + 
+                                cityStateZip + ' for: ' + party['name'] +
+                                ', ' + party['address'])
+            city = 'Memphis'
+            state = 'TN'
         return {
-                'FIRST NAME' : names[1] if len(names) > 1 else '',
-                'LAST NAME' : names[0],
+                'FIRST NAME' : names[1] if len(names) > 1 else names[0],
+                'LAST NAME' : names[0] if len(names) > 1 else '',
                 'ADDRESS 1' : address1,
                 'ADDRESS 2' : '',
                 'CITY' : city,
                 'STATE' : state,
                 'ZIP CODE' : party['zip']
-            }
+        }
     def writeCSV(self, a_z_cases, tenants, landlords):
         for caseNumber in list(a_z_cases):
             case = a_z_cases[caseNumber]
             for party in case['parties']:
                 if party['type'] == 'DEFENDANT':
-                    tenants[caseNumber] = self.createParty(party)
+                    theP = self.createParty(party)
+                    if theP:
+                        tenants[caseNumber] = theP
                 elif party['type'] in ['PRO SE LITIGANT', 'PLAINTIFF', 'ATTORNEY FOR PLAINTIFF']:
-                    landlords[party['eid']] = self.createParty(party)
+                    theP = self.createParty(party)
+                    if theP:
+                        landlords[party['eid']] = theP
     def run(self):
         self.log('Started: ' + self.toJSON())
         tenants = {}
         landlords = {}
         for i in range(self.numDays):
             a_z_cases = {}
-            self.getByAlpha(self.endLetter, self.endLetter, a_z_cases)
+            self.getByAlpha(self.startLetter, self.endLetter, a_z_cases)
             self.writeCSV(a_z_cases, tenants, landlords)
             currentDate = datetime.strptime(self.theDate, self.DATE_FORMAT)
             currentDate = currentDate - timedelta(days = 1)
@@ -138,4 +149,4 @@ class AddressScraper:
         self.run()
 
 if __name__ == "__main__":
-    AddressScraper().test()
+    AddressScraper().run()
