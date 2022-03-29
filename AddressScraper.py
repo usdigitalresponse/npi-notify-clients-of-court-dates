@@ -8,12 +8,15 @@ from typing import List
 import sys
 import re
 import json
+import csv
 
 class AddressScraper:
     def __init__(self):
         self.caseScraper = case.CaseScraper()
         self.errors = []
         self.MAX_DAYS = 260
+        self.startLetter = 'a'
+        self.endLetter = 'b'
         self.DATE_FORMAT = '%Y-%m-%d'
         self.theDate = datetime.now().strftime(self.DATE_FORMAT)
         self.numDays = 7
@@ -69,20 +72,6 @@ class AddressScraper:
             except  Exception as e:
                 self.errors.append('Letter: ' + letter + ', date: ' + self.theDate + ', Exception: ' + str(e))
         # self.logProgress(totalStart, startLetter, endLetter, len(hashByCaseNumber))
-    def getByWildCard(self):
-        wildcard_cases = {}
-        retVals = self.sendQuery(self.theDate, "*", wildcard_cases)
-        self.log("*," + self.theDate + "," + str(retVals[0]) + "," + str(retVals[1]))
-        return wildcard_cases
-    def compare_scraping(self, a_z_cases):
-        wildcard_cases = self.getByWildCard()
-        for key in list(wildcard_cases):
-            msg = ''
-            if key not in a_z_cases:
-                msg = 'NOT'
-            else:
-                msg = '___'
-            print(msg + "," + key + "," + wildcard_cases[key])
     def findSettlements(self, case):
         for entry in case['docket_entries']:
             if entry['description'] == 'POSSESSION $___& COST FED':
@@ -91,31 +80,62 @@ class AddressScraper:
                 delta = settledDate - filedDate
                 self.log(case['description']['case_num'] + "," + str(settledDate) + ','
                         + str(filedDate) + ',' + str(delta.days))
+    def createParty(self, party) :
+        names = party['name'].split(', ')
+        addresses = party['address'].split('\n')
+        address1 = ''
+        for i in range(len(addresses) - 1):
+            address1 = address1 + ',' + addresses[i]
+        cityStateZip = addresses[len(addresses) - 1]
+        [city, state, theZip] = cityStateZip.split(' ')
+        return {
+                'FIRST NAME' : names[1] if len(names) > 1 else '',
+                'LAST NAME' : names[0],
+                'ADDRESS 1' : address1,
+                'ADDRESS 2' : '',
+                'CITY' : city,
+                'STATE' : state,
+                'ZIP CODE' : party['zip']
+            }
     def writeCSV(self, a_z_cases, tenants, landlords):
-        for case in a_z_cases:
-            pass
+        for caseNumber in list(a_z_cases):
+            case = a_z_cases[caseNumber]
+            for party in case['parties']:
+                if party['type'] == 'DEFENDANT':
+                    tenants[caseNumber] = self.createParty(party)
+                elif party['type'] in ['PRO SE LITIGANT', 'PLAINTIFF', 'ATTORNEY FOR PLAINTIFF']:
+                    landlords[party['eid']] = self.createParty(party)
     def run(self):
         self.log('Started: ' + self.toJSON())
         tenants = {}
         landlords = {}
-        current_time = datetime.now()
         for i in range(self.numDays):
-            self.theDate = current_time.strftime(self.DATE_FORMAT)
             a_z_cases = {}
-            self.getByAlpha("a", "z", a_z_cases, tenants,landlords)
-            self.writeCSV(a_z_cases)
-            current_time = current_time - timedelta(days = 1)
-        with open('tenants.csv', 'w') as tenant_file:
-            tenant_file.write('')
-            for t in tenants:
-                tenant_file.write(t)
-        with open('landlords.csv') as landlord_file:
-            landlord_file.write('')
-            for ll in landlords:
-                landlord_file.write(ll)
+            self.getByAlpha(self.endLetter, self.endLetter, a_z_cases)
+            self.writeCSV(a_z_cases, tenants, landlords)
+            currentDate = datetime.strptime(self.theDate, self.DATE_FORMAT)
+            currentDate = currentDate - timedelta(days = 1)
+            self.theDate = currentDate.strftime(self.DATE_FORMAT)
+        theFieldNames = ['FIRST NAME', 'LAST NAME', 'ADDRESS 1', 'ADDRESS 2', 'CITY', 'STATE', 'ZIP CODE']
+        with open('tenants.csv', 'w', newline='') as tenant_file:
+            csvwriter = csv.DictWriter(tenant_file, fieldnames = theFieldNames)
+            csvwriter.writeheader()
+            for t in list(tenants):
+                csvwriter.writerow(tenants[t])
+        with open('landlords.csv', 'w', newline='') as landlord_file:
+            csvwriter = csv.DictWriter(landlord_file, fieldnames = theFieldNames)
+            csvwriter.writeheader()
+            for id in list(landlords):
+                csvwriter.writerow(landlords[id])
         self.log('Ended')
         for s in self.errors:
             self.log(s)
+    def test(self):
+        self.theDate = '2021-05-10'
+        self.numDays = 1
+        self.startLetter = 'b'
+        self.endLetter = 'b'
+        self.run()
 
 if __name__ == "__main__":
-    AddressScraper().run()
+    AddressScraper().test()
