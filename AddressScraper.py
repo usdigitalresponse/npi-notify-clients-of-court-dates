@@ -81,20 +81,25 @@ class AddressScraper:
                 self.log(case['description']['case_num'] + "," + str(settledDate) + ','
                         + str(filedDate) + ',' + str(delta.days))
     def createParty(self, party) :
+        if not party['address']:
+            self.errors.append('No address for: ' + party['name'])
+            return None
         names = party['name'].split(', ')
         addresses = party['address'].split('\n')
         address1 = ''
-        for i in range(len(addresses) - 1):
+        cityStateZip = ''
+        theRe = re.compile('^(\w+?) (\w\w) \d\d\d\d\d')
+        for i in range(len(addresses)):
+            if theRe.match(addresses[i]):
+                cityStateZip = addresses[i]
+                break;
             address1 = address1 + ',' + addresses[i]
-        cityStateZip = addresses[len(addresses) - 1]
-        if len(cityStateZip.split(' ')) == 3:
+        if cityStateZip:
             [city, state, theZip] = cityStateZip.split(' ')
         else:
-            self.errors.append("Unable to split city/state/zip from: " + 
-                                cityStateZip + ' for: ' + party['name'] +
+            self.errors.append('Unable to split city/state/zip for: ' + party['name'] +
                                 ', ' + party['address'])
-            city = 'Memphis'
-            state = 'TN'
+            return None
         return {
                 'FIRST NAME' : names[1] if len(names) > 1 else names[0],
                 'LAST NAME' : names[0] if len(names) > 1 else '',
@@ -108,14 +113,20 @@ class AddressScraper:
         for caseNumber in list(a_z_cases):
             case = a_z_cases[caseNumber]
             for party in case['parties']:
+                caseURL = r'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck\_public\_qry\_doct.cp\_dktrpt\_frames?case_id=' + str(caseNumber)
                 if party['type'] == 'DEFENDANT':
                     theP = self.createParty(party)
                     if theP:
                         tenants[caseNumber] = theP
+                    else:
+                        self.errors.append('Unable to get tenant address for case: ' + caseURL)
                 elif party['type'] in ['PRO SE LITIGANT', 'PLAINTIFF', 'ATTORNEY FOR PLAINTIFF']:
+                    landlordURL = r'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_cpty.cp_personcase_details_idx?id_code=' + str(party['eid'])
                     theP = self.createParty(party)
                     if theP:
                         landlords[party['eid']] = theP
+                    else:
+                        self.errors.append('Unable to get landlord address for landlord: ' + landlordURL + ', case: ' + caseURL)
     def run(self):
         self.log('Started: ' + self.toJSON())
         tenants = {}
