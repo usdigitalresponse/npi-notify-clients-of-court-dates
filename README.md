@@ -1,9 +1,6 @@
 # NPI: Notify Clients of Court Dates
 
-# This code is not used anywhere
-
-- A python scraper in AWS obviates the Java scraper
-- No-code automations in Airtable obviate the Javascript app
+# This code is (currently) not used nywhere
 
 ***
 This repository falls under [U.S. Digital Response’s Code of Conduct](./CODE_OF_CONDUCT.md), and we will hold all participants in issues, pull requests, discussions, and other spaces related to this project to that Code of Conduct. Please see [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) for the full code.
