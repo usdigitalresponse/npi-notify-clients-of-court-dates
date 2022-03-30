@@ -153,7 +153,7 @@ class AddressScraper:
             self.theDate = currentDate.strftime(self.DATE_FORMAT)
         self.loadMaps(a_z_cases, tenants, landlords)
         # self.dumpInputData(a_z_cases)
-        self.writeCSV(a_z_cases, tenants, landlords)
+        self.writeCSV(tenants, landlords)
         for s in self.errors:
             self.log(s)
         self.log('Ended')
