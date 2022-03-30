@@ -53,7 +53,6 @@ class AddressScraper:
         numCases = len(cases)
         for c in cases:
             hashByCaseNumber[c['Eviction Case Number']] = self.caseScraper.get(c['Eviction Case Number'])
-        # self.log(theLastInitial + ',numCases: ' + str(numCases) + ',len(hashByCaseNumber): ' + str(len(hashByCaseNumber)))
         return [numCases, round(end - start)]
     def logProgress(self, totalStart, startLetter, endLetter, numCases):
         totalEnd = time.time()
@@ -93,7 +92,7 @@ class AddressScraper:
             if theRe.match(addresses[i]):
                 cityStateZip = addresses[i]
                 break;
-            address1 = address1 + ',' + addresses[i]
+            address1 = addresses[i] if i == 0 else (',' + addresses[i])
         if cityStateZip:
             [city, state, theZip] = cityStateZip.split(' ')
         else:
@@ -113,7 +112,7 @@ class AddressScraper:
         for caseNumber in list(a_z_cases):
             case = a_z_cases[caseNumber]
             for party in case['parties']:
-                caseURL = r'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck\_public\_qry\_doct.cp\_dktrpt\_frames?case_id=' + str(caseNumber)
+                caseURL = r'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_doct.cp_dktrpt_frames?case_id=' + str(caseNumber)
                 if party['type'] == 'DEFENDANT':
                     theP = self.createParty(party)
                     if theP:
