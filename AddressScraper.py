@@ -108,7 +108,7 @@ class AddressScraper:
                 'STATE' : state,
                 'ZIP CODE' : party['zip']
         }
-    def writeCSV(self, a_z_cases, tenants, landlords):
+    def loadMaps(self, a_z_cases, tenants, landlords):
         for caseNumber in list(a_z_cases):
             case = a_z_cases[caseNumber]
             for party in case['parties']:
@@ -126,17 +126,10 @@ class AddressScraper:
                         landlords[party['eid']] = theP
                     else:
                         self.errors.append('Unable to get landlord address for landlord: ' + landlordURL + ', case: ' + caseURL)
-    def run(self):
-        self.log('Started: ' + self.toJSON())
-        tenants = {}
-        landlords = {}
-        for i in range(self.numDays):
-            a_z_cases = {}
-            self.getByAlpha(self.startLetter, self.endLetter, a_z_cases)
-            self.writeCSV(a_z_cases, tenants, landlords)
-            currentDate = datetime.strptime(self.theDate, self.DATE_FORMAT)
-            currentDate = currentDate - timedelta(days = 1)
-            self.theDate = currentDate.strftime(self.DATE_FORMAT)
+    def dumpInputData(self, a_z_cases):
+        with open('inputs.json', 'w') as fp:            
+            fp.write(json.dumps(a_z_cases, indent=4, sort_keys=True, default=str))
+    def writeCSV(self, tenants, landlords):
         theFieldNames = ['FIRST NAME', 'LAST NAME', 'ADDRESS 1', 'ADDRESS 2', 'CITY', 'STATE', 'ZIP CODE']
         with open('tenants.csv', 'w', newline='') as tenant_file:
             csvwriter = csv.DictWriter(tenant_file, fieldnames = theFieldNames)
@@ -148,15 +141,30 @@ class AddressScraper:
             csvwriter.writeheader()
             for id in list(landlords):
                 csvwriter.writerow(landlords[id])
-        self.log('Ended')
+    def run(self):
+        self.log('Started: ' + self.toJSON())
+        tenants = {}
+        landlords = {}
+        a_z_cases = {}
+        for i in range(self.numDays):
+            self.getByAlpha(self.startLetter, self.endLetter, a_z_cases)
+            currentDate = datetime.strptime(self.theDate, self.DATE_FORMAT)
+            currentDate = currentDate - timedelta(days = 1)
+            self.theDate = currentDate.strftime(self.DATE_FORMAT)
+        self.loadMaps(a_z_cases, tenants, landlords)
+        # self.dumpInputData(a_z_cases)
+        self.writeCSV(a_z_cases, tenants, landlords)
         for s in self.errors:
             self.log(s)
+        self.log('Ended')
     def test(self):
-        self.theDate = '2021-05-10'
-        self.numDays = 1
-        self.startLetter = 'b'
-        self.endLetter = 'b'
-        self.run()
+        tenants = {}
+        landlords = {}
+        a_z_cases = {}
+        with open('inputs.json', 'r') as fp:            
+            a_z_cases = json.loads(fp.read())
+        self.loadMaps(a_z_cases, tenants, landlords)
+        self.writeCSV(tenants, landlords)
 
 if __name__ == "__main__":
     AddressScraper().run()
