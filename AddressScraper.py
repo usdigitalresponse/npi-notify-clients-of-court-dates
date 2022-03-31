@@ -28,6 +28,12 @@ class AddressScraper:
                 elif i == 2:
                     self.handleDays(arg)
                     break
+        self.PLAINTIFF_PRIORITY = {
+            'PLAINTIFF' : 3,
+            'PRO SE LITIGANT' : 2,
+            'ATTORNEY FOR PLAINTIFF' : 1
+        }
+        self.plaintiffPriorities = {}
     def handleDate(self, arg):
         if re.match('\d\d\d\d-\d\d-\d\d', arg):
             startDate = datetime.strptime(arg, self.DATE_FORMAT)
@@ -110,6 +116,14 @@ class AddressScraper:
                 'STATE' : state,
                 'ZIP CODE' : party['zip']
         }
+    def addPlaintiff(self, landlords, party, caseURL):
+        theP = self.createParty(party)
+        if theP:
+            landlords[party['eid']] = theP
+            self.plaintiffPriorities[party['eid']] = self.PLAINTIFF_PRIORITY[party['type']]
+        else:
+            landlordURL = r'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_cpty.cp_personcase_details_idx?id_code=' + str(party['eid'])
+            self.errors.append('Unable to get landlord address for landlord: ' + landlordURL + ', case: ' + caseURL)
     def loadMaps(self, a_z_cases, tenants, landlords):
         for caseNumber in list(a_z_cases):
             case = a_z_cases[caseNumber]
@@ -122,12 +136,8 @@ class AddressScraper:
                     else:
                         self.errors.append('Unable to get tenant address for case: ' + caseURL)
                 elif party['type'] in ['PRO SE LITIGANT', 'PLAINTIFF', 'ATTORNEY FOR PLAINTIFF']:
-                    landlordURL = r'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_cpty.cp_personcase_details_idx?id_code=' + str(party['eid'])
-                    theP = self.createParty(party)
-                    if theP:
-                        landlords[party['eid']] = theP
-                    else:
-                        self.errors.append('Unable to get landlord address for landlord: ' + landlordURL + ', case: ' + caseURL)
+                    if not party['eid'] in self.plaintiffPriorities or (self.plaintiffPriorities[party['eid']] < self.PLAINTIFF_PRIORITY[party['type']]):
+                        self.addPlaintiff(landlords, party, caseURL)
     def dumpInputData(self, a_z_cases):
         with open('inputs.json', 'w') as fp:            
             fp.write(json.dumps(a_z_cases, indent=4, sort_keys=True, default=str))
