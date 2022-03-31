@@ -84,6 +84,8 @@ class AddressScraper:
             self.errors.append('No address for: ' + party['name'])
             return None
         names = party['name'].split(', ')
+        if len(names) == 2 and names[1] == 'LLC':
+            names = [party['name']]
         addresses = party['address'].split('\n')
         address1 = ''
         cityStateZip = ''
