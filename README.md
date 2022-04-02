@@ -1,17 +1,19 @@
 # NPI: Notify Clients of Court Dates
 
 # This code is (currently) not used anywhere
-
-- Install [@Github client](https://git-scm.com/download)
+Setup
+- Install [Github client](https://git-scm.com/download)
 - git clone https://github.com/usdigitalresponse/npi-notify-clients-of-court-dates.git
-- Install [@Python](https://www.python.org/downloads/), 3.10 or higher
+- Install [Python](https://www.python.org/downloads/), 3.10 or higher
 - git clone https://github.com/neighborhood-preservation-inc/eviction-bot.git
 - Follow eviction-bot setup instructions
-- Copy AddressScraper.py from here to there
 - Environment : PYTHONPATH = C:\Users\chris\Documents\Github\eviction-bot (change path as necessary)
 
 Recommended
 - Install Visual Studio Code
+
+While developing:
+- Copy AddressScraper.py from here to there
 
 ***
 This repository falls under [U.S. Digital Response’s Code of Conduct](./CODE_OF_CONDUCT.md), and we will hold all participants in issues, pull requests, discussions, and other spaces related to this project to that Code of Conduct. Please see [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) for the full code.
