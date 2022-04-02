@@ -85,13 +85,25 @@ class AddressScraper:
                 delta = settledDate - filedDate
                 self.log(case['description']['case_num'] + "," + str(settledDate) + ','
                         + str(filedDate) + ',' + str(delta.days))
+    def generateNames(self, rawName):
+        names = rawName.split(',')
+        for name in names:
+            if re.match('\W*LLC\W*', name):
+                return [rawName, '']
+        if (len(names) == 1):
+            return [names[0], '']
+        if (len(names) > 2):
+            print('Handling name: ' + rawName)
+            firstName = ','.join(names[1 : len(names) - 1])
+        else:
+            firstName = names[1]
+        lastName = names[0]
+        return [firstName.strip(), lastName.strip()]
     def createParty(self, party) :
         if not party['address']:
             self.errors.append('No address for: ' + party['name'])
             return None
-        names = party['name'].split(', ')
-        if len(names) == 2 and names[1] == 'LLC':
-            names = [party['name']]
+        [firstName, lastName] = self.generateNames(party['name'])
         addresses = party['address'].split('\n')
         address1 = ''
         cityStateZip = ''
@@ -108,8 +120,8 @@ class AddressScraper:
                                 ', ' + party['address'])
             return None
         return {
-                'FIRST NAME' : names[1] if len(names) > 1 else names[0],
-                'LAST NAME' : names[0] if len(names) > 1 else '',
+                'FIRST NAME' : firstName,
+                'LAST NAME' : lastName,
                 'ADDRESS 1' : address1,
                 'ADDRESS 2' : '',
                 'CITY' : city,
