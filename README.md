@@ -13,7 +13,7 @@ This project wouldn’t exist without the hard work of many people. Thanks to th
 
 ## License & Copyright
 
-Copyright (C) 2021 U.S. Digital Response (USDR)
+Copyright (C) 2022 U.S. Digital Response (USDR)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this software except in compliance with the License. You may obtain a copy of the License at:
 
