@@ -35,7 +35,6 @@ class AddressScraper:
             'ATTORNEY FOR PLAINTIFF' : 1
         }
         self.plaintiffPriorities = {}
-        self.numJudgments = 0
     def handleDate(self, arg):
         if re.match('\d\d\d\d-\d\d-\d\d', arg):
             startDate = datetime.strptime(arg, self.DATE_FORMAT)
@@ -71,8 +70,6 @@ class AddressScraper:
         for c in cases:
             if not judgmentsOnly or self.hasJudgement(c):
                 hashByCaseNumber[c['Eviction Case Number']] = self.caseScraper.get(c['Eviction Case Number'])
-            if self.hasJudgment(c):
-                self.numJudgments += 1
         return [numCases, round(end - start)]
     def getElapsedStr(self, start):
         theEnd = time.time()
@@ -85,14 +82,14 @@ class AddressScraper:
         self.log(startLetter + "-" + endLetter + "," + self.theDate + "," +
                 str(numCases) + "," + elapsedTime)
     def getByAlpha(self, startLetter, endLetter, hashByCaseNumber, judgmentsOnly):
-        totalStart = time.time()
+        # totalStart = time.time()
         for i in range(ord(startLetter), ord(endLetter) + 1):
             letter = chr(i)
             try:
                 self.sendQuery(self.theDate, letter, hashByCaseNumber, judgmentsOnly)
             except  Exception as e:
                 self.errors.append('Letter: ' + letter + ', date: ' + self.theDate + ', Exception: ' + str(e))
-        self.logProgress(totalStart, startLetter, endLetter, len(hashByCaseNumber))
+        # self.logProgress(totalStart, startLetter, endLetter, len(hashByCaseNumber))
     def findSettlements(self, case):
         for entry in case['docket_entries']:
             if entry['description'] == 'POSSESSION $___& COST FED':
@@ -177,8 +174,8 @@ class AddressScraper:
                     elif party['type'] in ['PRO SE LITIGANT', 'PLAINTIFF', 'ATTORNEY FOR PLAINTIFF']:
                         if not party['eid'] in self.plaintiffPriorities or (self.plaintiffPriorities[party['eid']] < self.PLAINTIFF_PRIORITY[party['type']]):
                             self.addPlaintiff(landlords, party, caseURL)
-    def dumpInputData(self, a_z_cases):
-        with open('inputs.json', 'w') as fp:            
+    def dumpInputData(self, a_z_cases, dateRange):
+        with open('inputs_' + dateRange + '.json', 'w') as fp:            
             fp.write(json.dumps(a_z_cases, indent=4, sort_keys=True, default=str))
     def writeCSV(self, tenants, landlords, judgments):
         theFieldNames = ['FIRST NAME', 'LAST NAME', 'ADDRESS 1', 'ADDRESS 2', 'CITY', 'STATE', 'ZIP CODE']
@@ -197,36 +194,41 @@ class AddressScraper:
             csvwriter.writeheader()
             for id in list(judgments):
                 csvwriter.writerow(judgments[id])
-    def run(self, doScrape):
+    def readFromLocal(self):
+        with open('inputs.json', 'r') as fp:            
+            a_z_cases = json.loads(fp.read())
+        self.dateRange = 'from_cached'
+        return a_z_cases
+    def scrape(self):
+        a_z_cases = {}
+        endDate = self.theDate
+        startTime = time.time()
+        for i in range(self.MAX_DAYS):
+            self.getByAlpha(self.startLetter, self.endLetter, a_z_cases, False)
+            doWrite = (i % 7 == 6)
+            if doWrite:
+                dateRange = self.theDate + '_' + endDate
+                self.dumpInputData(a_z_cases, dateRange)
+                self.logProgress(startTime, self.startLetter, self.endLetter, len(a_z_cases))
+                a_z_cases = {}
+            currentDate = datetime.strptime(self.theDate, self.DATE_FORMAT)
+            currentDate = currentDate - timedelta(days = 1)
+            self.theDate = currentDate.strftime(self.DATE_FORMAT)
+            if doWrite:
+                endDate = self.theDate
+                startTime = time.time()
+    def run(self):
         self.log('Started: ' + self.toJSON())
         started = time.time()
-        a_z_cases = {}
-        daysDone = 0
-        if doScrape:
-            for i in range(self.MAX_DAYS):
-                judgmentsOnly = daysDone >= self.numDays
-                self.getByAlpha(self.startLetter, self.endLetter, a_z_cases, judgmentsOnly)
-                if (self.numJudgments > 2):
-                    break
-                daysDone += 1
-                currentDate = datetime.strptime(self.theDate, self.DATE_FORMAT)
-                currentDate = currentDate - timedelta(days = 1)
-                self.theDate = currentDate.strftime(self.DATE_FORMAT)
-            self.dateRange = self.theDate + '_' + self.dateRange
-            self.dumpInputData(a_z_cases)
-        else:
-            with open('inputs.json', 'r') as fp:            
-                a_z_cases = json.loads(fp.read())
-            self.dateRange = 'from_cached'
+        a_z_cases = self.readFromLocal()
         tenants = {}
         landlords = {}
         judgments = {}
         self.loadMaps(a_z_cases, tenants, landlords, judgments)
         self.writeCSV(tenants, landlords, judgments)
-        self.dumpInputData(a_z_cases)
         for s in self.errors:
             self.log(s)
         self.log('Ended: ' + self.getElapsedStr(started))
 
 if __name__ == "__main__":
-    AddressScraper().run(True)
+    AddressScraper().scrape()
