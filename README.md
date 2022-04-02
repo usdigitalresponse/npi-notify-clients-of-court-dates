@@ -14,6 +14,7 @@ Recommended
 
 While developing:
 - Copy AddressScraper.py from here to there
+- python -m pipenv run python scrapers/court/case_id.py
 
 ***
 This repository falls under [U.S. Digital Response’s Code of Conduct](./CODE_OF_CONDUCT.md), and we will hold all participants in issues, pull requests, discussions, and other spaces related to this project to that Code of Conduct. Please see [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) for the full code.
