@@ -35,6 +35,7 @@ class AddressScraper:
             'ATTORNEY FOR PLAINTIFF' : 1
         }
         self.plaintiffPriorities = {}
+        self.numJudgments = 0
     def handleDate(self, arg):
         if re.match('\d\d\d\d-\d\d-\d\d', arg):
             startDate = datetime.strptime(arg, self.DATE_FORMAT)
@@ -53,13 +54,25 @@ class AddressScraper:
     def log(self, message):
         timeTag = datetime.now()
         print('"' + str(timeTag) + '",' + message)
-    def sendQuery(self, theDate, theLastInitial, hashByCaseNumber) -> List[int]:
+    def hasJudgment(self, case):
+        today = time.time()
+        minDay = today - timedelta(days = self.numDays)
+        for entry in case['docket_entries']:
+            if entry['description'] == 'POSSESSION $___& COST FED':
+                settledDate = entry['date']
+                if (settledDate <= today) and (settledDate >= minDay):
+                    return True
+        return False
+    def sendQuery(self, theDate, theLastInitial, hashByCaseNumber, judgmentsOnly) -> List[int]:
         start = time.time()
         cases = case_id.CaseIdScraper().get(date = theDate, last_initial = theLastInitial)
         end = time.time()
         numCases = len(cases)
         for c in cases:
-            hashByCaseNumber[c['Eviction Case Number']] = self.caseScraper.get(c['Eviction Case Number'])
+            if not judgmentsOnly or self.hasJudgement(c):
+                hashByCaseNumber[c['Eviction Case Number']] = self.caseScraper.get(c['Eviction Case Number'])
+            if self.hasJudgment(c):
+                self.numJudgments += 1
         return [numCases, round(end - start)]
     def getElapsedStr(self, start):
         theEnd = time.time()
@@ -71,12 +84,12 @@ class AddressScraper:
         elapsedTime = self.getElapsedStr(totalStart)
         self.log(startLetter + "-" + endLetter + "," + self.theDate + "," +
                 str(numCases) + "," + elapsedTime)
-    def getByAlpha(self, startLetter, endLetter, hashByCaseNumber):
+    def getByAlpha(self, startLetter, endLetter, hashByCaseNumber, judgmentsOnly):
         totalStart = time.time()
         for i in range(ord(startLetter), ord(endLetter) + 1):
             letter = chr(i)
             try:
-                self.sendQuery(self.theDate, letter, hashByCaseNumber)
+                self.sendQuery(self.theDate, letter, hashByCaseNumber, judgmentsOnly)
             except  Exception as e:
                 self.errors.append('Letter: ' + letter + ', date: ' + self.theDate + ', Exception: ' + str(e))
         self.logProgress(totalStart, startLetter, endLetter, len(hashByCaseNumber))
@@ -138,24 +151,36 @@ class AddressScraper:
         else:
             landlordURL = r'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_cpty.cp_personcase_details_idx?id_code=' + str(party['eid'])
             self.errors.append('Unable to get landlord address for landlord: ' + landlordURL + ', case: ' + caseURL)
-    def loadMaps(self, a_z_cases, tenants, landlords):
+    def createTenant(self, case, tenantMap, caseNumber):
+        for party in case['parties']:
+            caseURL = r'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_doct.cp_dktrpt_frames?case_id=' + str(caseNumber)
+            if party['type'] == 'DEFENDANT':
+                theP = self.createParty(party)
+                if theP:
+                    tenantMap[caseNumber] = theP
+                else:
+                    self.errors.append('Unable to get tenant address for case: ' + caseURL)
+    def loadMaps(self, a_z_cases, tenants, landlords, judgments):
         for caseNumber in list(a_z_cases):
             case = a_z_cases[caseNumber]
-            for party in case['parties']:
-                caseURL = r'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_doct.cp_dktrpt_frames?case_id=' + str(caseNumber)
-                if party['type'] == 'DEFENDANT':
-                    theP = self.createParty(party)
-                    if theP:
-                        tenants[caseNumber] = theP
-                    else:
-                        self.errors.append('Unable to get tenant address for case: ' + caseURL)
-                elif party['type'] in ['PRO SE LITIGANT', 'PLAINTIFF', 'ATTORNEY FOR PLAINTIFF']:
-                    if not party['eid'] in self.plaintiffPriorities or (self.plaintiffPriorities[party['eid']] < self.PLAINTIFF_PRIORITY[party['type']]):
-                        self.addPlaintiff(landlords, party, caseURL)
+            if self.hasJudgment(case):
+                self.createTenant(case, judgments, caseNumber)
+            else:
+                for party in case['parties']:
+                    caseURL = r'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_doct.cp_dktrpt_frames?case_id=' + str(caseNumber)
+                    if party['type'] == 'DEFENDANT':
+                        theP = self.createParty(party)
+                        if theP:
+                            tenants[caseNumber] = theP
+                        else:
+                            self.errors.append('Unable to get tenant address for case: ' + caseURL)
+                    elif party['type'] in ['PRO SE LITIGANT', 'PLAINTIFF', 'ATTORNEY FOR PLAINTIFF']:
+                        if not party['eid'] in self.plaintiffPriorities or (self.plaintiffPriorities[party['eid']] < self.PLAINTIFF_PRIORITY[party['type']]):
+                            self.addPlaintiff(landlords, party, caseURL)
     def dumpInputData(self, a_z_cases):
         with open('inputs.json', 'w') as fp:            
             fp.write(json.dumps(a_z_cases, indent=4, sort_keys=True, default=str))
-    def writeCSV(self, tenants, landlords):
+    def writeCSV(self, tenants, landlords, judgments):
         theFieldNames = ['FIRST NAME', 'LAST NAME', 'ADDRESS 1', 'ADDRESS 2', 'CITY', 'STATE', 'ZIP CODE']
         with open('Tenant_Filings_' + self.dateRange + '.csv', 'w', newline='') as tenant_file:
             csvwriter = csv.DictWriter(tenant_file, fieldnames = theFieldNames)
@@ -167,15 +192,23 @@ class AddressScraper:
             csvwriter.writeheader()
             for id in list(landlords):
                 csvwriter.writerow(landlords[id])
+        with open('Tenant_Judgments_' + self.dateRange + '.csv', 'w', newline='') as landlord_file:
+            csvwriter = csv.DictWriter(landlord_file, fieldnames = theFieldNames)
+            csvwriter.writeheader()
+            for id in list(judgments):
+                csvwriter.writerow(judgments[id])
     def run(self, doScrape):
         self.log('Started: ' + self.toJSON())
         started = time.time()
-        tenants = {}
-        landlords = {}
         a_z_cases = {}
+        daysDone = 0
         if doScrape:
-            for i in range(self.numDays):
-                self.getByAlpha(self.startLetter, self.endLetter, a_z_cases)
+            for i in range(self.MAX_DAYS):
+                judgmentsOnly = daysDone >= self.numDays
+                self.getByAlpha(self.startLetter, self.endLetter, a_z_cases, judgmentsOnly)
+                if (self.numJudgments > 2):
+                    break
+                daysDone += 1
                 currentDate = datetime.strptime(self.theDate, self.DATE_FORMAT)
                 currentDate = currentDate - timedelta(days = 1)
                 self.theDate = currentDate.strftime(self.DATE_FORMAT)
@@ -185,9 +218,12 @@ class AddressScraper:
             with open('inputs.json', 'r') as fp:            
                 a_z_cases = json.loads(fp.read())
             self.dateRange = 'from_cached'
-        self.loadMaps(a_z_cases, tenants, landlords)
+        tenants = {}
+        landlords = {}
+        judgments = {}
+        self.loadMaps(a_z_cases, tenants, landlords, judgments)
+        self.writeCSV(tenants, landlords, judgments)
         self.dumpInputData(a_z_cases)
-        self.writeCSV(tenants, landlords)
         for s in self.errors:
             self.log(s)
         self.log('Ended: ' + self.getElapsedStr(started))
