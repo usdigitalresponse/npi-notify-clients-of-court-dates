@@ -2,8 +2,8 @@
 
 # This code is (currently) not used anywhere
 
-- Install Github client
-- Install Python 3.10 (or higher)
+- Install [@Github client](https://git-scm.com/download)
+- Install [@Python](https://www.python.org/downloads/), 3.10 or higher
 - Environment : PYTHONPATH = C:\Users\chris\Documents\Github\eviction-bot (change path as necessary)
 
 ***
