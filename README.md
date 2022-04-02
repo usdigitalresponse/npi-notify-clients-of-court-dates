@@ -3,6 +3,7 @@
 # This code is (currently) not used anywhere
 
 - Install [@Github client](https://git-scm.com/download)
+- git clone https://github.com/usdigitalresponse/npi-notify-clients-of-court-dates.git
 - Install [@Python](https://www.python.org/downloads/), 3.10 or higher
 - git clone https://github.com/neighborhood-preservation-inc/eviction-bot.git
 - Follow eviction-bot setup instructions
