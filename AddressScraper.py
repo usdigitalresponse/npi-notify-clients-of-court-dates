@@ -112,7 +112,7 @@ class AddressScraper:
             if theRe.match(addresses[i]):
                 cityStateZip = addresses[i]
                 break;
-            address1 = addresses[i] if i == 0 else (',' + addresses[i])
+            address1 = addresses[i] if i == 0 else (address1 + ', ' + addresses[i])
         if cityStateZip:
             [city, state, theZip] = cityStateZip.split(' ')
         else:
