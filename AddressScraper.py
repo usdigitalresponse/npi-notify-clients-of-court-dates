@@ -19,6 +19,7 @@ class AddressScraper:
         self.endLetter = 'z'
         self.DATE_FORMAT = '%Y-%m-%d'
         self.theDate = datetime.now().strftime(self.DATE_FORMAT)
+        self.dateRange = self.theDate
         self.numDays = 7
         if len(sys.argv) > 0:
             for i, arg in enumerate(sys.argv):
@@ -60,12 +61,14 @@ class AddressScraper:
         for c in cases:
             hashByCaseNumber[c['Eviction Case Number']] = self.caseScraper.get(c['Eviction Case Number'])
         return [numCases, round(end - start)]
-    def logProgress(self, totalStart, startLetter, endLetter, numCases):
-        totalEnd = time.time()
-        totalSeconds = int(round(totalEnd - totalStart))
+    def getElapsedStr(self, start):
+        theEnd = time.time()
+        totalSeconds = int(round(theEnd - start))
         minutes = round(totalSeconds / 60)
         seconds = round(totalSeconds % 60)
-        elapsedTime = '{0:0>2}:{1:0>2}'.format(minutes, seconds)
+        return '{0:0>2}:{1:0>2}'.format(minutes, seconds)
+    def logProgress(self, totalStart, startLetter, endLetter, numCases):
+        elapsedTime = self.getElapsedStr(totalStart)
         self.log(startLetter + "-" + endLetter + "," + self.theDate + "," +
                 str(numCases) + "," + elapsedTime)
     def getByAlpha(self, startLetter, endLetter, hashByCaseNumber):
@@ -93,7 +96,6 @@ class AddressScraper:
         if (len(names) == 1):
             return [names[0], '']
         if (len(names) > 2):
-            print('Handling name: ' + rawName)
             firstName = ','.join(names[1 : len(names) - 1])
         else:
             firstName = names[1]
@@ -155,40 +157,40 @@ class AddressScraper:
             fp.write(json.dumps(a_z_cases, indent=4, sort_keys=True, default=str))
     def writeCSV(self, tenants, landlords):
         theFieldNames = ['FIRST NAME', 'LAST NAME', 'ADDRESS 1', 'ADDRESS 2', 'CITY', 'STATE', 'ZIP CODE']
-        with open('tenants.csv', 'w', newline='') as tenant_file:
+        with open('Tenant_Filings_' + self.dateRange + '.csv', 'w', newline='') as tenant_file:
             csvwriter = csv.DictWriter(tenant_file, fieldnames = theFieldNames)
             csvwriter.writeheader()
             for t in list(tenants):
                 csvwriter.writerow(tenants[t])
-        with open('landlords.csv', 'w', newline='') as landlord_file:
+        with open('Landlord_Filings_' + self.dateRange + '.csv', 'w', newline='') as landlord_file:
             csvwriter = csv.DictWriter(landlord_file, fieldnames = theFieldNames)
             csvwriter.writeheader()
             for id in list(landlords):
                 csvwriter.writerow(landlords[id])
-    def run(self):
+    def run(self, doScrape):
         self.log('Started: ' + self.toJSON())
+        started = time.time()
         tenants = {}
         landlords = {}
         a_z_cases = {}
-        for i in range(self.numDays):
-            self.getByAlpha(self.startLetter, self.endLetter, a_z_cases)
-            currentDate = datetime.strptime(self.theDate, self.DATE_FORMAT)
-            currentDate = currentDate - timedelta(days = 1)
-            self.theDate = currentDate.strftime(self.DATE_FORMAT)
+        if doScrape:
+            for i in range(self.numDays):
+                self.getByAlpha(self.startLetter, self.endLetter, a_z_cases)
+                currentDate = datetime.strptime(self.theDate, self.DATE_FORMAT)
+                currentDate = currentDate - timedelta(days = 1)
+                self.theDate = currentDate.strftime(self.DATE_FORMAT)
+            self.dateRange = self.theDate + '_' + self.dateRange
+            self.dumpInputData(a_z_cases)
+        else:
+            with open('inputs.json', 'r') as fp:            
+                a_z_cases = json.loads(fp.read())
+            self.dateRange = 'from_cached'
         self.loadMaps(a_z_cases, tenants, landlords)
-        # self.dumpInputData(a_z_cases)
+        self.dumpInputData(a_z_cases)
         self.writeCSV(tenants, landlords)
         for s in self.errors:
             self.log(s)
-        self.log('Ended')
-    def test(self):
-        tenants = {}
-        landlords = {}
-        a_z_cases = {}
-        with open('inputs.json', 'r') as fp:            
-            a_z_cases = json.loads(fp.read())
-        self.loadMaps(a_z_cases, tenants, landlords)
-        self.writeCSV(tenants, landlords)
+        self.log('Ended: ' + self.getElapsedStr(started))
 
 if __name__ == "__main__":
-    AddressScraper().run()
+    AddressScraper().run(True)
