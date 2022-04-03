@@ -209,7 +209,7 @@ class AddressScraper:
         mypath = '.'
         onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
         for fileName in onlyfiles:
-            theMatch = re.match('.+(\d\d\d\d\-\d\d\-\d\d).(\d\d\d\d\-\d\d\-\d\d).+\.json', fileName)
+            theMatch = re.match('.+(\d\d\d\d\-\d\d\-\d\d).(\d\d\d\d\-\d\d\-\d\d)\.json', fileName)
             if theMatch:
                 with open(fileName, 'r') as fp:
                     source_cases =  json.loads(fp.read())
