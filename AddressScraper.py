@@ -9,6 +9,8 @@ import sys
 import re
 import json
 import csv
+from os import listdir
+from os.path import isfile, join
 
 class AddressScraper:
     def __init__(self):
@@ -54,11 +56,11 @@ class AddressScraper:
         timeTag = datetime.now()
         print('"' + str(timeTag) + '",' + message)
     def hasJudgment(self, case):
-        today = time.time()
+        today = datetime.now()
         minDay = today - timedelta(days = self.numDays)
         for entry in case['docket_entries']:
             if entry['description'] == 'POSSESSION $___& COST FED':
-                settledDate = entry['date']
+                settledDate = datetime.strptime(entry['date'].split(' ')[0], self.DATE_FORMAT)
                 if (settledDate <= today) and (settledDate >= minDay):
                     return True
         return False
@@ -194,11 +196,32 @@ class AddressScraper:
             csvwriter.writeheader()
             for id in list(judgments):
                 csvwriter.writerow(judgments[id])
+    def filterCases(self, target_cases, source_cases):
+        for caseNumber in list(source_cases):
+            if self.hasJudgment(source_cases[caseNumber]):
+                target_cases[caseNumber] = source_cases[caseNumber]
     def readFromLocal(self):
-        with open('inputs.json', 'r') as fp:            
-            a_z_cases = json.loads(fp.read())
-        self.dateRange = 'from_cached'
+        a_z_cases = {}
+        cutOffDate = datetime.now() - timedelta(days = 7)
+        mypath = '.'
+        onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+        for fileName in onlyfiles:
+            theMatch = re.match('.+(\d\d\d\d\-\d\d\-\d\d).(\d\d\d\d\-\d\d\-\d\d).+', fileName)
+            if theMatch:
+                with open(fileName, 'r') as fp:
+                    source_cases =  json.loads(fp.read())
+                    judgmentsOnly = False
+                    if theMatch.group(2):
+                        endDate = datetime.strptime(theMatch.group(2), self.DATE_FORMAT)
+                        judgmentsOnly = cutOffDate > endDate
+                    if judgmentsOnly:
+                        self.filterCases(a_z_cases, source_cases)
+                    else:
+                        for caseNumber in list(source_cases):
+                            a_z_cases[caseNumber] = source_cases[caseNumber]
         return a_z_cases
+    def getAppropriateCases(self):
+        return self.readFromLocal()
     def scrape(self):
         a_z_cases = {}
         endDate = self.theDate
@@ -220,7 +243,7 @@ class AddressScraper:
     def run(self):
         self.log('Started: ' + self.toJSON())
         started = time.time()
-        a_z_cases = self.readFromLocal()
+        a_z_cases = self.getAppropriateCases()
         tenants = {}
         landlords = {}
         judgments = {}
@@ -231,4 +254,4 @@ class AddressScraper:
         self.log('Ended: ' + self.getElapsedStr(started))
 
 if __name__ == "__main__":
-    AddressScraper().scrape()
+    AddressScraper().run()
