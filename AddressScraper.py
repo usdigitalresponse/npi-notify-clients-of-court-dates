@@ -229,7 +229,7 @@ class AddressScraper:
         first = True
         theHeaders = {'Authorization' : 'Api-Key API_KEY_GOES_HERE'}
         host = 'http://npi-server-prod-1276539913.us-east-1.elb.amazonaws.com/api/cases/'
-        for i in range(self.MAX_DAYS):
+        for i in range(int(self.MAX_DAYS / 7)):
             endDate = datetime.strptime(self.theDate, self.DATE_FORMAT)
             startDate = endDate - timedelta(days = 7)
             url = host + '?start=' + startDate.strftime(self.DATE_FORMAT) + '&end=' + self.theDate
