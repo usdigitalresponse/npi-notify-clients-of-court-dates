@@ -181,25 +181,20 @@ class AddressScraper:
     def dumpInputData(self, a_z_cases, dateRange):
         with open('inputs_' + dateRange + '.json', 'w') as fp:            
             fp.write(json.dumps(a_z_cases, indent=4, sort_keys=True, default=str))
+    def writeOneCSV(self, fileName, caseMap):
+        sortedMap = dict(sorted(caseMap.items(), key=lambda item: item[1]['FIRST NAME'] + ',' + item[1]['LAST NAME']))
+        theFieldNames = ['FIRST NAME', 'LAST NAME', 'ADDRESS 1', 'ADDRESS 2', 'CITY', 'STATE', 'ZIP CODE']
+        with open(fileName, 'w', newline='') as csv_file:
+            csvwriter = csv.DictWriter(csv_file, fieldnames = theFieldNames)
+            csvwriter.writeheader()
+            for t in list(sortedMap):
+                csvwriter.writerow(sortedMap[t])
     def writeCSV(self, tenants, landlords, judgments):
         startDate = datetime.now() - timedelta(days = 7)
         self.dateRange = startDate.strftime(self.DATE_FORMAT) + '_' + self.endDate
-        theFieldNames = ['FIRST NAME', 'LAST NAME', 'ADDRESS 1', 'ADDRESS 2', 'CITY', 'STATE', 'ZIP CODE']
-        with open('Tenant_Filings_' + self.dateRange + '.csv', 'w', newline='') as tenant_file:
-            csvwriter = csv.DictWriter(tenant_file, fieldnames = theFieldNames)
-            csvwriter.writeheader()
-            for t in list(tenants):
-                csvwriter.writerow(tenants[t])
-        with open('Landlord_Filings_' + self.dateRange + '.csv', 'w', newline='') as landlord_file:
-            csvwriter = csv.DictWriter(landlord_file, fieldnames = theFieldNames)
-            csvwriter.writeheader()
-            for id in list(landlords):
-                csvwriter.writerow(landlords[id])
-        with open('Tenant_Judgments_' + self.dateRange + '.csv', 'w', newline='') as landlord_file:
-            csvwriter = csv.DictWriter(landlord_file, fieldnames = theFieldNames)
-            csvwriter.writeheader()
-            for id in list(judgments):
-                csvwriter.writerow(judgments[id])
+        self.writeOneCSV('Tenant_Filings_' + self.dateRange + '.csv', tenants)
+        self.writeOneCSV('Landlord_Filings_' + self.dateRange + '.csv', landlords)
+        self.writeOneCSV('Tenant_Judgments_' + self.dateRange + '.csv', judgments)
     def filterCases(self, target_cases, source_cases):
         for caseNumber in list(source_cases):
             if self.hasJudgment(source_cases[caseNumber]):
