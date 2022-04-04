@@ -192,7 +192,7 @@ class AddressScraper:
             for t in list(sortedMap):
                 csvwriter.writerow(sortedMap[t])
     def writeCSV(self, tenants, landlords, judgments):
-        startDate = datetime.now() - timedelta(days = 7)
+        startDate = datetime.now() - timedelta(days = self.numDays)
         self.dateRange = startDate.strftime(self.DATE_FORMAT) + '_' + self.endDate
         self.writeOneCSV('Tenant_Filings_' + self.dateRange + '.csv', tenants)
         self.writeOneCSV('Landlord_Filings_' + self.dateRange + '.csv', landlords)
@@ -203,7 +203,7 @@ class AddressScraper:
                 target_cases[caseNumber] = source_cases[caseNumber]
     def readFromLocal(self):
         a_z_cases = {}
-        cutOffDate = datetime.now() - timedelta(days = 7)
+        cutOffDate = datetime.now() - timedelta(days = self.numDays)
         mypath = '.'
         onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
         for fileName in onlyfiles:
@@ -245,7 +245,7 @@ class AddressScraper:
             self.theDate = newEndDate.strftime(self.DATE_FORMAT)
         return a_z_cases
     def getAppropriateCases(self):
-        return self.readFromAPI()
+        return self.readFromLocal()
     def scrape(self):
         a_z_cases = {}
         endDate = self.theDate
