@@ -11,6 +11,7 @@ import json
 import csv
 from os import listdir
 from os.path import isfile, join
+import requests
 
 class AddressScraper:
     def __init__(self):
@@ -223,8 +224,29 @@ class AddressScraper:
                         for caseNumber in list(source_cases):
                             a_z_cases[caseNumber] = source_cases[caseNumber]
         return a_z_cases
+    def readFromAPI(self):
+        a_z_cases = {}
+        first = True
+        theHeaders = {'Authorization' : 'Api-Key API_KEY_GOES_HERE'}
+        host = 'http://npi-server-prod-1276539913.us-east-1.elb.amazonaws.com/api/cases/'
+        for i in range(self.MAX_DAYS):
+            endDate = datetime.strptime(self.theDate, self.DATE_FORMAT)
+            startDate = endDate - timedelta(days = 7)
+            url = host + '?start=' + startDate.strftime(self.DATE_FORMAT) + '&end=' + self.theDate
+            response = requests.get(url, headers = theHeaders)
+            api_cases = json.loads(response.text)
+            source_cases = {}
+            for case in api_cases:
+                source_cases[case['case_num']] = case
+            if first:
+                for caseNumber in list(source_cases):
+                    a_z_cases[caseNumber] = source_cases[caseNumber]
+                first = False
+            else:
+                self.filterCases(a_z_cases, source_cases)
+        return a_z_cases
     def getAppropriateCases(self):
-        return self.readFromLocal()
+        return self.readFromAPI()
     def scrape(self):
         a_z_cases = {}
         endDate = self.theDate
@@ -255,6 +277,9 @@ class AddressScraper:
         for s in self.errors:
             self.log(s)
         self.log('Ended: ' + self.getElapsedStr(started))
+    def test(self):
+        self.theDate = '2022-04-03'
+        self.run()
 
 if __name__ == "__main__":
-    AddressScraper().run()
+    AddressScraper().test()
