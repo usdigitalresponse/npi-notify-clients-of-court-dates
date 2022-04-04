@@ -1,5 +1,3 @@
-# Rough code to figure out performance characteristics of Memphis county court web site.
-
 from scrapers.court import case_id, case
 import time
 from datetime import datetime
@@ -62,7 +60,11 @@ class AddressScraper:
         minDay = today - timedelta(days = self.numDays)
         for entry in case['docket_entries']:
             if entry['description'] == 'POSSESSION $___& COST FED':
-                settledDate = datetime.strptime(entry['date'].split(' ')[0], self.DATE_FORMAT)
+                if ' ' in entry['date']:
+                    splitter = ' '
+                else:
+                    splitter = 'T'   
+                settledDate = datetime.strptime(entry['date'].split(splitter)[0], self.DATE_FORMAT)
                 if (settledDate <= today) and (settledDate >= minDay):
                     return True
         return False
@@ -239,6 +241,8 @@ class AddressScraper:
                 first = False
             else:
                 self.filterCases(a_z_cases, source_cases)
+            newEndDate = datetime.strptime(self.theDate, self.DATE_FORMAT) - timedelta(days = 7)
+            self.theDate = newEndDate.strftime(self.DATE_FORMAT)
         return a_z_cases
     def getAppropriateCases(self):
         return self.readFromAPI()
