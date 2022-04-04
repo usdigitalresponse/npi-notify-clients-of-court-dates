@@ -59,7 +59,7 @@ class AddressScraper:
         today = datetime.now()
         minDay = today - timedelta(days = self.numDays)
         for entry in case['docket_entries']:
-            if entry['description'] == 'POSSESSION $___& COST FED':
+            if entry['description'] in ['POSSESSION $___& COST FED', 'POSSESSION ONLY FED']:
                 if ' ' in entry['date']:
                     splitter = ' '
                 else:
@@ -98,7 +98,7 @@ class AddressScraper:
         # self.logProgress(totalStart, startLetter, endLetter, len(hashByCaseNumber))
     def findSettlements(self, case):
         for entry in case['docket_entries']:
-            if entry['description'] == 'POSSESSION $___& COST FED':
+            if entry['description'] in ['POSSESSION $___& COST FED', 'POSSESSION ONLY FED']:
                 settledDate = entry['date']
                 filedDate = case['description']['filing_date']
                 delta = settledDate - filedDate
@@ -241,7 +241,7 @@ class AddressScraper:
                 first = False
             else:
                 self.filterCases(a_z_cases, source_cases)
-            newEndDate = datetime.strptime(self.theDate, self.DATE_FORMAT) - timedelta(days = 7)
+            newEndDate = datetime.strptime(self.theDate, self.DATE_FORMAT) - timedelta(days = 8)
             self.theDate = newEndDate.strftime(self.DATE_FORMAT)
         return a_z_cases
     def getAppropriateCases(self):
