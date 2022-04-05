@@ -13,7 +13,59 @@ import requests
 
 class AddressScraper:
     def __init__(self):
-        self.caseScraper = case.CaseScraper()
+        self.MAX_DAYS = 30
+        self.startLetter = 'a'
+        self.endLetter = 'b'
+        self.DATE_FORMAT = '%Y-%m-%d'
+        self.theDate = datetime.now().strftime(self.DATE_FORMAT)
+        self.errors = []
+        self.pac = PostcardAddressCreator()
+    def logProgress(self, totalStart, startLetter, endLetter, numCases):
+        elapsedTime = self.pac.getElapsedStr(totalStart)
+        self.pac.log(startLetter + "-" + endLetter + "," + self.theDate + "," +
+                str(numCases) + "," + elapsedTime)
+    def dumpInputData(self, a_z_cases, dateRange):
+        with open('inputs_' + dateRange + '.json', 'w') as fp:            
+            fp.write(json.dumps(a_z_cases, indent=4, sort_keys=True, default=str))
+    def sendQuery(self, theDate, theLastInitial, hashByCaseNumber, judgmentsOnly) -> List[int]:
+        start = time.time()
+        cases = case_id.CaseIdScraper().get(date = theDate, last_initial = theLastInitial)
+        end = time.time()
+        numCases = len(cases)
+        for c in cases:
+            if not judgmentsOnly or self.hasJudgement(c):
+                hashByCaseNumber[c['Eviction Case Number']] = self.caseScraper.get(c['Eviction Case Number'])
+        return [numCases, round(end - start)]
+    def getByAlpha(self, startLetter, endLetter, hashByCaseNumber, judgmentsOnly):
+        for i in range(ord(startLetter), ord(endLetter) + 1):
+            letter = chr(i)
+            try:
+                self.sendQuery(self.theDate, letter, hashByCaseNumber, judgmentsOnly)
+            except  Exception as e:
+                self.errors.append('Letter: ' + letter + ', date: ' + self.theDate + ', Exception: ' + str(e))
+    def scrape(self):
+        a_z_cases = {}
+        endDate = self.theDate
+        startTime = time.time()
+        for i in range(self.MAX_DAYS):
+            self.getByAlpha(self.startLetter, self.endLetter, a_z_cases, False)
+            doWrite = (i % 7 == 6)
+            if doWrite:
+                dateRange = self.theDate + '_' + endDate
+                self.dumpInputData(a_z_cases, dateRange)
+                self.logProgress(startTime, self.startLetter, self.endLetter, len(a_z_cases))
+                a_z_cases = {}
+            currentDate = datetime.strptime(self.theDate, self.DATE_FORMAT)
+            currentDate = currentDate - timedelta(days = 1)
+            self.theDate = currentDate.strftime(self.DATE_FORMAT)
+            if doWrite:
+                endDate = self.theDate
+                startTime = time.time()
+        for s in self.errors:
+            self.log(s)
+
+class PostcardAddressCreator:
+    def __init__(self):
         self.errors = []
         self.MAX_DAYS = 260
         self.startLetter = 'a'
@@ -68,34 +120,12 @@ class AddressScraper:
                 if (settledDate <= today) and (settledDate >= minDay):
                     return True
         return False
-    def sendQuery(self, theDate, theLastInitial, hashByCaseNumber, judgmentsOnly) -> List[int]:
-        start = time.time()
-        cases = case_id.CaseIdScraper().get(date = theDate, last_initial = theLastInitial)
-        end = time.time()
-        numCases = len(cases)
-        for c in cases:
-            if not judgmentsOnly or self.hasJudgement(c):
-                hashByCaseNumber[c['Eviction Case Number']] = self.caseScraper.get(c['Eviction Case Number'])
-        return [numCases, round(end - start)]
     def getElapsedStr(self, start):
         theEnd = time.time()
         totalSeconds = int(round(theEnd - start))
         minutes = round(totalSeconds / 60)
         seconds = round(totalSeconds % 60)
         return '{0:0>2}:{1:0>2}'.format(minutes, seconds)
-    def logProgress(self, totalStart, startLetter, endLetter, numCases):
-        elapsedTime = self.getElapsedStr(totalStart)
-        self.log(startLetter + "-" + endLetter + "," + self.theDate + "," +
-                str(numCases) + "," + elapsedTime)
-    def getByAlpha(self, startLetter, endLetter, hashByCaseNumber, judgmentsOnly):
-        # totalStart = time.time()
-        for i in range(ord(startLetter), ord(endLetter) + 1):
-            letter = chr(i)
-            try:
-                self.sendQuery(self.theDate, letter, hashByCaseNumber, judgmentsOnly)
-            except  Exception as e:
-                self.errors.append('Letter: ' + letter + ', date: ' + self.theDate + ', Exception: ' + str(e))
-        # self.logProgress(totalStart, startLetter, endLetter, len(hashByCaseNumber))
     def findSettlements(self, case):
         for entry in case['docket_entries']:
             if entry['description'] in ['POSSESSION $___& COST FED', 'POSSESSION ONLY FED']:
@@ -186,9 +216,6 @@ class AddressScraper:
                     elif party['type'] in ['PRO SE LITIGANT', 'PLAINTIFF', 'ATTORNEY FOR PLAINTIFF']:
                         if not party['eid'] in self.plaintiffPriorities or (self.plaintiffPriorities[party['eid']] < self.PLAINTIFF_PRIORITY[party['type']]):
                             self.addPlaintiff(landlords, party, caseURL)
-    def dumpInputData(self, a_z_cases, dateRange):
-        with open('inputs_' + dateRange + '.json', 'w') as fp:            
-            fp.write(json.dumps(a_z_cases, indent=4, sort_keys=True, default=str))
     def writeOneCSV(self, fileName, caseMap):
         sortedMap = dict(sorted(caseMap.items(), key=lambda item: item[1]['FIRST NAME'] + ',' + item[1]['LAST NAME']))
         theFieldNames = ['FIRST NAME', 'LAST NAME', 'ADDRESS 1', 'ADDRESS 2', 'CITY', 'STATE', 'ZIP CODE']
@@ -249,24 +276,6 @@ class AddressScraper:
         return a_z_cases
     def getAppropriateCases(self):
         return self.readFromLocal()
-    def scrape(self):
-        a_z_cases = {}
-        endDate = self.theDate
-        startTime = time.time()
-        for i in range(self.MAX_DAYS):
-            self.getByAlpha(self.startLetter, self.endLetter, a_z_cases, False)
-            doWrite = (i % 7 == 6)
-            if doWrite:
-                dateRange = self.theDate + '_' + endDate
-                self.dumpInputData(a_z_cases, dateRange)
-                self.logProgress(startTime, self.startLetter, self.endLetter, len(a_z_cases))
-                a_z_cases = {}
-            currentDate = datetime.strptime(self.theDate, self.DATE_FORMAT)
-            currentDate = currentDate - timedelta(days = 1)
-            self.theDate = currentDate.strftime(self.DATE_FORMAT)
-            if doWrite:
-                endDate = self.theDate
-                startTime = time.time()
     def run(self):
         self.log('Started: ' + self.toJSON())
         started = time.time()
@@ -281,8 +290,8 @@ class AddressScraper:
         self.log('Ended: ' + self.getElapsedStr(started))
     def test(self):
         self.theDate = '2022-04-03'
-        self.numDays = 17
+        self.numDays = 18
         self.run()
 
 if __name__ == "__main__":
-    AddressScraper().test()
+    PostcardAddressCreator().test()
