@@ -125,14 +125,16 @@ class AddressScraper:
         addresses = party['address'].split('\n')
         address1 = ''
         cityStateZip = ''
-        theRe = re.compile('^(\w+?) (\w\w) \d\d\d\d\d')
+        theRe = re.compile('^([\w ]+?) (\w\w) \d\d\d\d\d')
         for i in range(len(addresses)):
             if theRe.match(addresses[i]):
                 cityStateZip = addresses[i]
                 break;
             address1 = addresses[i] if i == 0 else (address1 + ', ' + addresses[i])
         if cityStateZip:
-            [city, state, theZip] = cityStateZip.split(' ')
+            theMatch = theRe.match(cityStateZip)
+            city = theMatch.group(1)
+            state = theMatch.group(2)
         else:
             self.errors.append('Unable to split city/state/zip for: ' + party['name'] +
                                 ', ' + party['address'])
@@ -199,8 +201,8 @@ class AddressScraper:
         self.writeOneCSV('Tenant_Judgments_' + self.dateRange + '.csv', judgments)
     def filterCases(self, target_cases, source_cases):
         for caseNumber in list(source_cases):
-            if self.hasJudgment(source_cases[caseNumber]):
-                target_cases[caseNumber] = source_cases[caseNumber]
+                if self.hasJudgment(source_cases[caseNumber]):
+                    target_cases[caseNumber] = source_cases[caseNumber]
     def readFromLocal(self):
         a_z_cases = {}
         cutOffDate = datetime.now() - timedelta(days = self.numDays)
@@ -211,14 +213,11 @@ class AddressScraper:
             if theMatch:
                 with open(fileName, 'r') as fp:
                     source_cases =  json.loads(fp.read())
-                    judgmentsOnly = False
-                    if theMatch.group(2):
-                        endDate = datetime.strptime(theMatch.group(2), self.DATE_FORMAT)
-                        judgmentsOnly = cutOffDate > endDate
-                    if judgmentsOnly:
-                        self.filterCases(a_z_cases, source_cases)
-                    else:
-                        for caseNumber in list(source_cases):
+                    for caseNumber in list(source_cases):
+                        filingDate = datetime.strptime(source_cases[caseNumber]['description']['filing_date'].split(' ')[0], self.DATE_FORMAT)
+                        if (filingDate >= cutOffDate):
+                            a_z_cases[caseNumber] = source_cases[caseNumber]
+                        elif self.hasJudgment(source_cases[caseNumber]):
                             a_z_cases[caseNumber] = source_cases[caseNumber]
         return a_z_cases
     def readFromAPI(self):
