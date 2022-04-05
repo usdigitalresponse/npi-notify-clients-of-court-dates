@@ -63,6 +63,23 @@ class AddressScraper:
                 startTime = time.time()
         for s in self.errors:
             self.log(s)
+    def readFromLocal(self, numDays, hasJudgment):
+        a_z_cases = {}
+        cutOffDate = datetime.now() - timedelta(days = numDays)
+        mypath = '.'
+        onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+        for fileName in onlyfiles:
+            theMatch = re.match('.+(\d\d\d\d\-\d\d\-\d\d).(\d\d\d\d\-\d\d\-\d\d)\.json', fileName)
+            if theMatch:
+                with open(fileName, 'r') as fp:
+                    source_cases =  json.loads(fp.read())
+                    for caseNumber in list(source_cases):
+                        filingDate = datetime.strptime(source_cases[caseNumber]['description']['filing_date'].split(' ')[0], self.DATE_FORMAT)
+                        if (filingDate >= cutOffDate):
+                            a_z_cases[caseNumber] = source_cases[caseNumber]
+                        elif hasJudgment(source_cases[caseNumber]):
+                            a_z_cases[caseNumber] = source_cases[caseNumber]
+        return a_z_cases
 
 class PostcardAddressCreator:
     def __init__(self):
@@ -168,7 +185,6 @@ class PostcardAddressCreator:
             state = theMatch.group(2)
             if not re.match('\d\d\d\d\d', theZip):
                 theZip = theMatch.group(3)
-
         else:
             self.errors.append('Unable to split city/state/zip for: ' + party['name'] +
                                 ', ' + party['address'])
@@ -234,23 +250,6 @@ class PostcardAddressCreator:
         for caseNumber in list(source_cases):
                 if self.hasJudgment(source_cases[caseNumber]):
                     target_cases[caseNumber] = source_cases[caseNumber]
-    def readFromLocal(self):
-        a_z_cases = {}
-        cutOffDate = datetime.now() - timedelta(days = self.numDays)
-        mypath = '.'
-        onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-        for fileName in onlyfiles:
-            theMatch = re.match('.+(\d\d\d\d\-\d\d\-\d\d).(\d\d\d\d\-\d\d\-\d\d)\.json', fileName)
-            if theMatch:
-                with open(fileName, 'r') as fp:
-                    source_cases =  json.loads(fp.read())
-                    for caseNumber in list(source_cases):
-                        filingDate = datetime.strptime(source_cases[caseNumber]['description']['filing_date'].split(' ')[0], self.DATE_FORMAT)
-                        if (filingDate >= cutOffDate):
-                            a_z_cases[caseNumber] = source_cases[caseNumber]
-                        elif self.hasJudgment(source_cases[caseNumber]):
-                            a_z_cases[caseNumber] = source_cases[caseNumber]
-        return a_z_cases
     def readFromAPI(self):
         a_z_cases = {}
         first = True
@@ -274,12 +273,10 @@ class PostcardAddressCreator:
             newEndDate = datetime.strptime(self.theDate, self.DATE_FORMAT) - timedelta(days = 8)
             self.theDate = newEndDate.strftime(self.DATE_FORMAT)
         return a_z_cases
-    def getAppropriateCases(self):
-        return self.readFromLocal()
     def run(self):
         self.log('Started: ' + self.toJSON())
         started = time.time()
-        a_z_cases = self.getAppropriateCases()
+        a_z_cases = AddressScraper().readFromLocal(self.numDays, self.hasJudgment)
         tenants = {}
         landlords = {}
         judgments = {}
