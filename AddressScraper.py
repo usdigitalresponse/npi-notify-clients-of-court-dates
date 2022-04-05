@@ -118,14 +118,15 @@ class AddressScraper:
         lastName = names[0]
         return [firstName.strip(), lastName.strip()]
     def createParty(self, party) :
-        if not party['address']:
+        if not party['address'] or party['address'] == 'unavailable':
             self.errors.append('No address for: ' + party['name'])
             return None
         [firstName, lastName] = self.generateNames(party['name'])
         addresses = party['address'].split('\n')
         address1 = ''
         cityStateZip = ''
-        theRe = re.compile('^([\w ]+?) (\w\w) \d\d\d\d\d')
+        theZip = party['zip']
+        theRe = re.compile('^([\w ]+?) (\w\w) (\d\d\d\d\d)')
         for i in range(len(addresses)):
             if theRe.match(addresses[i]):
                 cityStateZip = addresses[i]
@@ -135,6 +136,9 @@ class AddressScraper:
             theMatch = theRe.match(cityStateZip)
             city = theMatch.group(1)
             state = theMatch.group(2)
+            if not re.match('\d\d\d\d\d', theZip):
+                theZip = theMatch.group(3)
+
         else:
             self.errors.append('Unable to split city/state/zip for: ' + party['name'] +
                                 ', ' + party['address'])
@@ -146,7 +150,7 @@ class AddressScraper:
                 'ADDRESS 2' : '',
                 'CITY' : city,
                 'STATE' : state,
-                'ZIP CODE' : party['zip']
+                'ZIP CODE' : theZip
         }
     def addPlaintiff(self, landlords, party, caseURL):
         theP = self.createParty(party)
@@ -277,6 +281,7 @@ class AddressScraper:
         self.log('Ended: ' + self.getElapsedStr(started))
     def test(self):
         self.theDate = '2022-04-03'
+        self.numDays = 17
         self.run()
 
 if __name__ == "__main__":
