@@ -15,7 +15,7 @@ class AddressScraper:
     """To be deleted when AWS webservice data is reliable.
     """
     def __init__(self):
-        self.MAX_DAYS = 5
+        self.MAX_DAYS = 260
         self.DATE_FORMAT = '%Y-%m-%d'
         self.theDate = datetime.now().strftime(self.DATE_FORMAT)
         self.errors = []
@@ -32,7 +32,7 @@ class AddressScraper:
         cases = case_id.CaseIdScraper().get(date = theDate)
         for c in cases:
             if not judgmentsOnly or self.hasJudgement(c):
-                hashByCaseNumber[c['Eviction Case Number']] = case_id.CaseIdScraper().get(c['Eviction Case Number'])
+                hashByCaseNumber[c['Eviction Case Number']] = case.CaseScraper().get(c['Eviction Case Number'])
         self.logProgress(start, len(cases))
     def getByAlpha(self, hashByCaseNumber, judgmentsOnly):
             try:
