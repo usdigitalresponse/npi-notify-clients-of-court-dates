@@ -15,36 +15,30 @@ class AddressScraper:
     """To be deleted when AWS webservice data is reliable.
     """
     def __init__(self):
-        self.MAX_DAYS = 260
-        self.startLetter = 'a'
-        self.endLetter = 'z'
+        self.MAX_DAYS = 3
         self.DATE_FORMAT = '%Y-%m-%d'
         self.theDate = datetime.now().strftime(self.DATE_FORMAT)
         self.errors = []
         self.pac = PostcardAddressCreator()
-    def logProgress(self, totalStart, startLetter, endLetter, numCases):
+    def logProgress(self, totalStart, numCases):
         elapsedTime = self.pac.getElapsedStr(totalStart)
-        self.pac.log(startLetter + "-" + endLetter + "," + self.theDate + "," +
-                str(numCases) + "," + elapsedTime)
+        self.pac.log(self.theDate + "," + str(numCases) + "," + elapsedTime)
     def dumpInputData(self, a_z_cases, dateRange):
         with open('inputs_' + dateRange + '.json', 'w') as fp:            
             fp.write(json.dumps(a_z_cases, indent=4, sort_keys=True, default=str))
-    def sendQuery(self, theDate, theLastInitial, hashByCaseNumber, judgmentsOnly) -> List[int]:
+    def sendQuery(self, theDate, hashByCaseNumber, judgmentsOnly) -> List[int]:
         start = time.time()
-        cases = case_id.CaseIdScraper().get(date = theDate, last_initial = theLastInitial)
-        end = time.time()
-        numCases = len(cases)
-        for c in cases:
-            if not judgmentsOnly or self.hasJudgement(c):
-                hashByCaseNumber[c['Eviction Case Number']] = case_id.CaseIdScraper().get(c['Eviction Case Number'])
-        return [numCases, round(end - start)]
-    def getByAlpha(self, startLetter, endLetter, hashByCaseNumber, judgmentsOnly):
-        for i in range(ord(startLetter), ord(endLetter) + 1):
-            letter = chr(i)
+        self.log("Started query for: " + self.theDate)
+        cases = case_id.CaseIdScraper().get(date = theDate)
+        # for c in cases:
+        #    if not judgmentsOnly or self.hasJudgement(c):
+        #        hashByCaseNumber[c['Eviction Case Number']] = case_id.CaseIdScraper().get(c['Eviction Case Number'])
+        self.logProgress(start, len(cases))
+    def getByAlpha(self, hashByCaseNumber, judgmentsOnly):
             try:
-                self.sendQuery(self.theDate, letter, hashByCaseNumber, judgmentsOnly)
+                self.sendQuery(self.theDate, hashByCaseNumber, judgmentsOnly)
             except  Exception as e:
-                self.errors.append('Letter: ' + letter + ', date: ' + self.theDate + ', Exception: ' + str(e))
+                self.errors.append('Date: ' + self.theDate + ', Exception: ' + str(e))
     def log(self, message):
         timeTag = datetime.now()
         print('"' + str(timeTag) + '",' + message)
@@ -53,12 +47,11 @@ class AddressScraper:
         endDate = self.theDate
         startTime = time.time()
         for i in range(self.MAX_DAYS):
-            self.getByAlpha(self.startLetter, self.endLetter, a_z_cases, False)
+            self.getByAlpha(a_z_cases, False)
             doWrite = (i % 7 == 6)
             if doWrite:
                 dateRange = self.theDate + '_' + endDate
                 self.dumpInputData(a_z_cases, dateRange)
-                self.logProgress(startTime, self.startLetter, self.endLetter, len(a_z_cases))
                 a_z_cases = {}
             currentDate = datetime.strptime(self.theDate, self.DATE_FORMAT)
             currentDate = currentDate - timedelta(days = 1)
@@ -68,6 +61,7 @@ class AddressScraper:
                 startTime = time.time()
         for s in self.errors:
             self.log(s)
+        self.pac.log("Total runtime: " + self.pac.getElapsedStr(startTime))
     def readFromLocal(self, numDays, hasJudgment):
         a_z_cases = {}
         cutOffDate = datetime.now() - timedelta(days = numDays)
