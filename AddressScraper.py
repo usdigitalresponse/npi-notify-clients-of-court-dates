@@ -15,7 +15,7 @@ class AddressScraper:
     """To be deleted when AWS webservice data is reliable.
     """
     def __init__(self):
-        self.MAX_DAYS = 3
+        self.MAX_DAYS = 5
         self.DATE_FORMAT = '%Y-%m-%d'
         self.theDate = datetime.now().strftime(self.DATE_FORMAT)
         self.errors = []
@@ -30,9 +30,9 @@ class AddressScraper:
         start = time.time()
         self.log("Started query for: " + self.theDate)
         cases = case_id.CaseIdScraper().get(date = theDate)
-        # for c in cases:
-        #    if not judgmentsOnly or self.hasJudgement(c):
-        #        hashByCaseNumber[c['Eviction Case Number']] = case_id.CaseIdScraper().get(c['Eviction Case Number'])
+        for c in cases:
+            if not judgmentsOnly or self.hasJudgement(c):
+                hashByCaseNumber[c['Eviction Case Number']] = case_id.CaseIdScraper().get(c['Eviction Case Number'])
         self.logProgress(start, len(cases))
     def getByAlpha(self, hashByCaseNumber, judgmentsOnly):
             try:
@@ -343,4 +343,5 @@ class PostcardAddressCreator:
         self.run()
 
 if __name__ == "__main__":
-    PostcardAddressCreator().test()
+    AddressScraper().scrape()
+    # PostcardAddressCreator().test()
