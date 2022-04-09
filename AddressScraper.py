@@ -36,7 +36,7 @@ class AddressScraper:
         numCases = len(cases)
         for c in cases:
             if not judgmentsOnly or self.hasJudgement(c):
-                hashByCaseNumber[c['Eviction Case Number']] = self.caseScraper.get(c['Eviction Case Number'])
+                hashByCaseNumber[c['Eviction Case Number']] = case_id.CaseIdScraper().get(c['Eviction Case Number'])
         return [numCases, round(end - start)]
     def getByAlpha(self, startLetter, endLetter, hashByCaseNumber, judgmentsOnly):
         for i in range(ord(startLetter), ord(endLetter) + 1):
