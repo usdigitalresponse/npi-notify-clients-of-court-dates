@@ -13,7 +13,7 @@ Recommended
 - Install Visual Studio Code
 
 While developing:
-- Copy AddressScraper.py from here to there
+- Copy AddressScraper.py from this repository to eviction-bot repo.
 - python -m pipenv run python scrapers/court/case_id.py
 
 ***
