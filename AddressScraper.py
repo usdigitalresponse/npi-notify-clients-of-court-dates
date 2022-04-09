@@ -45,6 +45,9 @@ class AddressScraper:
                 self.sendQuery(self.theDate, letter, hashByCaseNumber, judgmentsOnly)
             except  Exception as e:
                 self.errors.append('Letter: ' + letter + ', date: ' + self.theDate + ', Exception: ' + str(e))
+    def log(self, message):
+        timeTag = datetime.now()
+        print('"' + str(timeTag) + '",' + message)
     def scrape(self):
         a_z_cases = {}
         endDate = self.theDate
