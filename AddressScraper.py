@@ -97,12 +97,6 @@ class PostcardAddressCreator:
         self.MAX_DAYS = 260
         """ Look back this many days for judgments. """
         
-        self.startLetter = 'a'
-        self.endLetter = 'z'
-        """May be faster to query for names starting with letters,
-        rather than a wildcard (e.g., *).
-        """
-
         self.DATE_FORMAT = '%Y-%m-%d'
         self.theDate = datetime.now().strftime(self.DATE_FORMAT)
         self.numDays = 7
@@ -317,7 +311,7 @@ class PostcardAddressCreator:
             api_cases = json.loads(response.text)
             source_cases = {}
             for case in api_cases:
-                source_cases[case['case_num']] = case
+                source_cases[int(case['case_num'])] = case
             if first:
                 for caseNumber in list(source_cases):
                     a_z_cases[caseNumber] = source_cases[caseNumber]
@@ -330,7 +324,7 @@ class PostcardAddressCreator:
     def run(self):
         self.log('Started: ' + self.toJSON())
         started = time.time()
-        a_z_cases = AddressScraper().readFromLocal(self.numDays, self.hasJudgment)
+        a_z_cases = self.readFromAPI()
         tenants = {}
         landlords = {}
         judgments = {}
@@ -339,11 +333,6 @@ class PostcardAddressCreator:
         for s in self.errors:
             self.log(s)
         self.log('Ended: ' + self.getElapsedStr(started))
-    def test(self):
-        self.theDate = '2022-04-03'
-        self.numDays = 18
-        self.run()
 
 if __name__ == "__main__":
-    AddressScraper().scrape()
-    # PostcardAddressCreator().test()
+    PostcardAddressCreator().run()
