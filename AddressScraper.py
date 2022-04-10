@@ -15,7 +15,9 @@ class AddressScraper:
     """To be deleted when AWS webservice data is reliable.
     """
     def __init__(self):
-        self.MAX_DAYS = 260
+        self.MAX_DAYS = 7 * 38
+        '''JSON Files are written by the week.
+        '''
         self.DATE_FORMAT = '%Y-%m-%d'
         self.theDate = datetime.now().strftime(self.DATE_FORMAT)
         self.errors = []
