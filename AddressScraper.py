@@ -244,20 +244,23 @@ class PostcardAddressCreator:
             self.plaintiffPriorities[party['eid']] = self.PLAINTIFF_PRIORITY[party['type']]
         else:
             self.errors.append('Unable to get landlord address for landlord: ' + landlordURL + ', case: ' + caseURL)
-    def createTenant(self, case, tenantMap, caseNumber):
+    def createTenantFromParty(self, party, tenantMap, caseNumber):
         """Add tenant address to appropriate map,
-        which is keyed by case number from website.
+        which is keyed by case number + tenant id,
+        since there can be multiple tenants at different addresses per case.
         """
+        caseURL = r'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_doct.cp_dktrpt_frames?case_id=' + str(caseNumber)
+        theP = self.createParty(party)
+        if theP:
+            if self.addDiagnostics:
+                theP['URL'] = caseURL
+            tenantMap[str(caseNumber) + party['eid']] = theP
+        else:
+            self.errors.append('Unable to get tenant address for case: ' + caseURL)
+    def createTenant(self, case, tenantMap, caseNumber):
         for party in case['parties']:
-            caseURL = r'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_doct.cp_dktrpt_frames?case_id=' + str(caseNumber)
             if party['type'] == 'DEFENDANT':
-                theP = self.createParty(party)
-                if theP:
-                    if self.addDiagnostics:
-                        theP['URL'] = caseURL
-                    tenantMap[caseNumber] = theP
-                else:
-                    self.errors.append('Unable to get tenant address for case: ' + caseURL)
+                self.createTenantFromParty(party, tenantMap, caseNumber)
     def loadMaps(self, a_z_cases, tenants, landlords, judgments):
         """Iterate through cases to build three maps,
         which will be used to create CSVs.
@@ -268,17 +271,11 @@ class PostcardAddressCreator:
                 self.createTenant(case, judgments, caseNumber)
             else:
                 for party in case['parties']:
-                    caseURL = r'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_doct.cp_dktrpt_frames?case_id=' + str(caseNumber)
                     if party['type'] == 'DEFENDANT':
-                        theP = self.createParty(party)
-                        if theP:
-                            if self.addDiagnostics:
-                                theP['URL'] = caseURL
-                            tenants[caseNumber] = theP
-                        else:
-                            self.errors.append('Unable to get tenant address for case: ' + caseURL)
+                        self.createTenantFromParty(party, tenants, caseNumber)
                     elif party['type'] in ['PRO SE LITIGANT', 'PLAINTIFF', 'ATTORNEY FOR PLAINTIFF']:
                         if not party['eid'] in self.plaintiffPriorities or (self.plaintiffPriorities[party['eid']] < self.PLAINTIFF_PRIORITY[party['type']]):
+                            caseURL = r'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_doct.cp_dktrpt_frames?case_id=' + str(caseNumber)
                             self.addPlaintiff(landlords, party, caseURL)
     def writeOneCSV(self, fileName, caseMap):
         """Write one CSV file, sorted by first name + last name.
