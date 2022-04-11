@@ -281,7 +281,8 @@ class PostcardAddressCreator:
         The sorting is just to make reading and comparing files easier.
         It isn't needed by the mailing house.
         """
-        sortedMap = dict(sorted(caseMap.items(), key=lambda item: item[1]['FIRST NAME'] + ',' + item[1]['LAST NAME']))
+        sortedMap = dict(sorted(caseMap.items(), key=lambda item:
+                            item[1]['FIRST NAME'] + ',' + item[1]['LAST NAME']+ ',' + item[1]['ADDRESS 1']))
         theFieldNames = ['FIRST NAME', 'LAST NAME', 'ADDRESS 1', 'ADDRESS 2', 'CITY', 'STATE', 'ZIP CODE']
         if self.addDiagnostics:
             theFieldNames.append('URL')
