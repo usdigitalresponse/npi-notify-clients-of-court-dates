@@ -1,86 +1,11 @@
-from scrapers.court import case_id, case
 import time
 from datetime import datetime
 from datetime import timedelta
-from typing import List
 import sys
 import re
 import json
 import csv
-from os import listdir
-from os.path import isfile, join
 import requests
-
-class AddressScraper:
-    """To be deleted when AWS webservice data is reliable.
-    """
-    def __init__(self):
-        self.MAX_DAYS = 7 * 38
-        '''JSON Files are written by the week.
-        '''
-        self.DATE_FORMAT = '%Y-%m-%d'
-        self.theDate = datetime.now().strftime(self.DATE_FORMAT)
-        self.errors = []
-        self.pac = PostcardAddressCreator()
-    def logProgress(self, totalStart, numCases):
-        elapsedTime = self.pac.getElapsedStr(totalStart)
-        self.pac.log(self.theDate + "," + str(numCases) + "," + elapsedTime)
-    def dumpInputData(self, a_z_cases, dateRange):
-        with open('inputs_' + dateRange + '.json', 'w') as fp:            
-            fp.write(json.dumps(a_z_cases, indent=4, sort_keys=True, default=str))
-    def sendQuery(self, theDate, hashByCaseNumber, judgmentsOnly) -> List[int]:
-        start = time.time()
-        self.log("Started query for: " + self.theDate)
-        cases = case_id.CaseIdScraper().get(date = theDate)
-        for c in cases:
-            if not judgmentsOnly or self.hasJudgement(c):
-                hashByCaseNumber[c['Eviction Case Number']] = case.CaseScraper().get(c['Eviction Case Number'])
-        self.logProgress(start, len(cases))
-    def getByAlpha(self, hashByCaseNumber, judgmentsOnly):
-            try:
-                self.sendQuery(self.theDate, hashByCaseNumber, judgmentsOnly)
-            except  Exception as e:
-                self.errors.append('Date: ' + self.theDate + ', Exception: ' + str(e))
-    def log(self, message):
-        timeTag = datetime.now()
-        print('"' + str(timeTag) + '",' + message)
-    def scrape(self):
-        a_z_cases = {}
-        endDate = self.theDate
-        startTime = time.time()
-        for i in range(self.MAX_DAYS):
-            self.getByAlpha(a_z_cases, False)
-            doWrite = (i % 7 == 6)
-            if doWrite:
-                dateRange = self.theDate + '_' + endDate
-                self.dumpInputData(a_z_cases, dateRange)
-                a_z_cases = {}
-            currentDate = datetime.strptime(self.theDate, self.DATE_FORMAT)
-            currentDate = currentDate - timedelta(days = 1)
-            self.theDate = currentDate.strftime(self.DATE_FORMAT)
-            if doWrite:
-                endDate = self.theDate
-                startTime = time.time()
-        for s in self.errors:
-            self.log(s)
-        self.pac.log("Total runtime: " + self.pac.getElapsedStr(startTime))
-    def readFromLocal(self, numDays, hasJudgment):
-        a_z_cases = {}
-        cutOffDate = datetime.now() - timedelta(days = numDays)
-        mypath = '.'
-        onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-        for fileName in onlyfiles:
-            theMatch = re.match('.+(\d\d\d\d\-\d\d\-\d\d).(\d\d\d\d\-\d\d\-\d\d)\.json', fileName)
-            if theMatch:
-                with open(fileName, 'r') as fp:
-                    source_cases =  json.loads(fp.read())
-                    for caseNumber in list(source_cases):
-                        filingDate = datetime.strptime(source_cases[caseNumber]['description']['filing_date'].split(' ')[0], self.DATE_FORMAT)
-                        if (filingDate >= cutOffDate):
-                            a_z_cases[caseNumber] = source_cases[caseNumber]
-                        elif hasJudgment(source_cases[caseNumber]):
-                            a_z_cases[caseNumber] = source_cases[caseNumber]
-        return a_z_cases
 
 class PostcardAddressCreator:
     """Read court case data from AWS webservice.
@@ -332,7 +257,6 @@ class PostcardAddressCreator:
     def run(self):
         self.log('Started: ' + self.toJSON())
         started = time.time()
-        # a_z_cases = AddressScraper().readFromLocal(self.numDays, self.hasJudgment)
         a_z_cases = self.readFromAPI()
         tenants = {}
         landlords = {}
