@@ -6,6 +6,7 @@ import re
 import json
 import csv
 import requests
+import os
 
 class PostcardAddressCreator:
     """Read court case data from AWS webservice.
@@ -226,15 +227,13 @@ class PostcardAddressCreator:
         for caseNumber in list(source_cases):
             if self.hasJudgment(source_cases[caseNumber]):
                 target_cases[caseNumber] = source_cases[caseNumber]
-    def readFromAPI(self):
+    def readFromAPI(self, apiKey):
         """Read a week's worth of data at a time.
         Load map with appropriate cases.
         """
         a_z_cases = {}
         first = True
-        # TODO: Determine what happens if there are days left over (e.g., not whole weeks).
-
-        theHeaders = {'Authorization' : 'Api-Key API_KEY_GOES_HERE'}
+        theHeaders = {'Authorization' : 'Api-Key ' + apiKey}
         host = 'http://npi-server-prod-1276539913.us-east-1.elb.amazonaws.com/api/cases/'
         for i in range(int(self.MAX_DAYS / 7)):
             endDate = datetime.strptime(self.theDate, self.DATE_FORMAT)
@@ -256,8 +255,13 @@ class PostcardAddressCreator:
         return a_z_cases
     def run(self):
         self.log('Started: ' + self.toJSON())
+        try:
+            apiKey = os.environ['CASES_API_KEY']
+        except:
+            self.log('No CASES_API_KEY system environment variable')
+            return
         started = time.time()
-        a_z_cases = self.readFromAPI()
+        a_z_cases = self.readFromAPI(apiKey)
         tenants = {}
         landlords = {}
         judgments = {}
