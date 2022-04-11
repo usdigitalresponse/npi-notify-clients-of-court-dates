@@ -197,7 +197,6 @@ class PostcardAddressCreator:
         """Given party data from the website, attempt to extract the names and address.
         """
         if not party['address'] or party['address'] == 'unavailable':
-            self.errors.append('No address for: ' + party['name'])
             return None
         [firstName, lastName] = self.generateNames(party['name'])
         addresses = party['address'].split('\n')
@@ -242,7 +241,7 @@ class PostcardAddressCreator:
                 theP['URL'] = landlordURL
             landlords[party['eid']] = theP
             self.plaintiffPriorities[party['eid']] = self.PLAINTIFF_PRIORITY[party['type']]
-        else:
+        elif party['address'] != 'unavailable':
             self.errors.append('Unable to get landlord address for landlord: ' + landlordURL + ', case: ' + caseURL)
     def createTenantFromParty(self, party, tenantMap, caseNumber):
         """Add tenant address to appropriate map,
@@ -255,7 +254,7 @@ class PostcardAddressCreator:
             if self.addDiagnostics:
                 theP['URL'] = caseURL
             tenantMap[str(caseNumber) + party['eid']] = theP
-        else:
+        elif party['address'] != 'unavailable':
             self.errors.append('Unable to get tenant address for case: ' + caseURL)
     def createTenant(self, case, tenantMap, caseNumber):
         for party in case['parties']:
