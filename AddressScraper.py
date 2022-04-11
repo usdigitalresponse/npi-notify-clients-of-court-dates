@@ -127,6 +127,9 @@ class PostcardAddressCreator:
         self.plaintiffPriorities = {}
         """Keep track of priorities while iterating over list of parties.
         """
+        self.addDiagnostics = False
+        """Add more columns to CSVs to help diagnose issues.
+        """
     def handleDate(self, arg):
         if re.match('\d\d\d\d-\d\d-\d\d', arg):
             startDate = datetime.strptime(arg, self.DATE_FORMAT)
@@ -233,11 +236,13 @@ class PostcardAddressCreator:
         which is keyed by eid from website (e.g., '@nnnnnnn').
         """
         theP = self.createParty(party)
+        landlordURL = r'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_cpty.cp_personcase_details_idx?id_code=' + str(party['eid'])
         if theP:
+            if self.addDiagnostics:
+                theP['URL'] = landlordURL
             landlords[party['eid']] = theP
             self.plaintiffPriorities[party['eid']] = self.PLAINTIFF_PRIORITY[party['type']]
         else:
-            landlordURL = r'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_cpty.cp_personcase_details_idx?id_code=' + str(party['eid'])
             self.errors.append('Unable to get landlord address for landlord: ' + landlordURL + ', case: ' + caseURL)
     def createTenant(self, case, tenantMap, caseNumber):
         """Add tenant address to appropriate map,
@@ -248,6 +253,8 @@ class PostcardAddressCreator:
             if party['type'] == 'DEFENDANT':
                 theP = self.createParty(party)
                 if theP:
+                    if self.addDiagnostics:
+                        theP['URL'] = caseURL
                     tenantMap[caseNumber] = theP
                 else:
                     self.errors.append('Unable to get tenant address for case: ' + caseURL)
@@ -265,6 +272,8 @@ class PostcardAddressCreator:
                     if party['type'] == 'DEFENDANT':
                         theP = self.createParty(party)
                         if theP:
+                            if self.addDiagnostics:
+                                theP['URL'] = caseURL
                             tenants[caseNumber] = theP
                         else:
                             self.errors.append('Unable to get tenant address for case: ' + caseURL)
@@ -278,6 +287,8 @@ class PostcardAddressCreator:
         """
         sortedMap = dict(sorted(caseMap.items(), key=lambda item: item[1]['FIRST NAME'] + ',' + item[1]['LAST NAME']))
         theFieldNames = ['FIRST NAME', 'LAST NAME', 'ADDRESS 1', 'ADDRESS 2', 'CITY', 'STATE', 'ZIP CODE']
+        if self.addDiagnostics:
+            theFieldNames.append('URL')
         with open(fileName, 'w', newline='') as csv_file:
             csvwriter = csv.DictWriter(csv_file, fieldnames = theFieldNames)
             csvwriter.writeheader()
@@ -299,7 +310,7 @@ class PostcardAddressCreator:
         """
         a_z_cases = {}
         first = True
-        # TODO: This won't add all judgments if numDays is not 7. To be fixed.
+        # TODO: Determine what happens if there are days left over (e.g., not whole weeks).
 
         theHeaders = {'Authorization' : 'Api-Key API_KEY_GOES_HERE'}
         host = 'http://npi-server-prod-1276539913.us-east-1.elb.amazonaws.com/api/cases/'
@@ -324,6 +335,7 @@ class PostcardAddressCreator:
     def run(self):
         self.log('Started: ' + self.toJSON())
         started = time.time()
+        # a_z_cases = AddressScraper().readFromLocal(self.numDays, self.hasJudgment)
         a_z_cases = self.readFromAPI()
         tenants = {}
         landlords = {}
